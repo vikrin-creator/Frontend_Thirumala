@@ -1,0 +1,113 @@
+'use client'
+
+import React, { useState } from 'react'
+
+interface SellerFormProps {
+  onAddSeller: (seller: { name: string; address: string; mobile: string; buyerName: string }) => void
+}
+
+export default function SellerForm({ onAddSeller }: SellerFormProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    address: '',
+    mobile: '',
+    buyerName: ''
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (formData.name && formData.address && formData.mobile) {
+      onAddSeller(formData)
+      setFormData({ name: '', address: '', mobile: '', buyerName: '' })
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-6 p-8 rounded-2xl form-container soft-shadow-lg">
+      <h2 className="text-gray-900 dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-0 pb-2">
+        Add New Seller
+      </h2>
+      
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <label className="flex flex-col w-full">
+            <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
+              Name
+            </p>
+            <input 
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 placeholder:text-gray-500 dark:placeholder-gray-400 p-3 text-base font-normal leading-normal" 
+              placeholder="Enter seller's name" 
+              type="text"
+              required
+            />
+          </label>
+          
+          <label className="flex flex-col w-full md:col-span-2">
+            <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
+              Address
+            </p>
+            <input 
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 placeholder:text-gray-500 dark:placeholder-gray-400 p-3 text-base font-normal leading-normal" 
+              placeholder="Enter seller's address" 
+              type="text"
+              required
+            />
+          </label>
+          
+          <label className="flex flex-col w-full">
+            <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
+              Mobile Number
+            </p>
+            <input 
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleChange}
+              className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 placeholder:text-gray-500 dark:placeholder-gray-400 p-3 text-base font-normal leading-normal" 
+              placeholder="Enter 10-digit mobile number" 
+              type="tel"
+              pattern="[0-9]{10}"
+              required
+            />
+          </label>
+
+          <label className="flex flex-col w-full">
+            <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
+              Buyer Name
+            </p>
+            <input 
+              name="buyerName"
+              value={formData.buyerName}
+              onChange={handleChange}
+              className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 placeholder:text-gray-500 dark:placeholder-gray-400 p-3 text-base font-normal leading-normal" 
+              placeholder="Enter buyer's name" 
+              type="text"
+              required
+            />
+          </label>
+        </div>
+        
+        <div className="flex justify-end pt-6">
+          <button 
+            type="submit"
+            className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95"
+          >
+            Save Seller
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
