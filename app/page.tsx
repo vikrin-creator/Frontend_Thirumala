@@ -11,27 +11,33 @@ import DailyLedgerPage from '../components/DailyLedgerPage'
 import { apiClient } from '../lib/api'
 
 interface Seller {
-  id: number
+  id: number | string
   name: string
   address: string
   mobile: string
+  city?: string
+  gst_number?: string
 }
 
 interface Buyer {
-  id: number
+  id: number | string
   name: string
   address: string
   mobile: string
+  city?: string
+  gst_number?: string
 }
 
 interface Lorry {
   id: number
-  sellerId: number
+  sellerId: number | string
   sellerName: string
   lorryNumber: string
+  counterpartyName: string
   unloadDate: string
   buyingDate: string
   bargainDate: string
+  billType: string
   billName: string
   billNumber: string
   itemName: string
@@ -39,6 +45,15 @@ interface Lorry {
   amount: number
   commission: number
   totalCommission: number
+}
+
+interface LedgerEntry {
+  id: number | string
+  sellerName: string
+  buyerName: string
+  loaded: 'Yes' | 'No'
+  conditionFromDate: string
+  conditionToDate: string
 }
 
 export default function Home() {
@@ -65,6 +80,8 @@ export default function Home() {
   const [sellers, setSellers] = useState<Seller[]>([])
 
   const [buyers, setBuyers] = useState<Buyer[]>([])
+
+  const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([])
 
   // Fetch sellers from backend on mount
   useEffect(() => {
@@ -104,28 +121,34 @@ export default function Home() {
       }
     }
 
+    const fetchLedger = async () => {
+      try {
+        const response = await apiClient.get('/ledger')
+        if (response.success && response.data) {
+          const mappedLedger = response.data.map((entry: any) => ({
+            id: entry._id || entry.id,
+            sellerName: entry.sellerName,
+            buyerName: entry.buyerName,
+            loaded: entry.loaded,
+            conditionFromDate: entry.conditionFromDate,
+            conditionToDate: entry.conditionToDate
+          }))
+          setLedgerEntries(mappedLedger)
+        }
+      } catch (error) {
+        console.error('Failed to fetch ledger entries:', error)
+      }
+    }
+
     fetchSellers()
     fetchBuyers()
+    fetchLedger()
   }, [])
 
-  const [lorries, setLorries] = useState<Lorry[]>([
-    {
-      id: 1,
-      sellerId: 1,
-      sellerName: 'John Doe',
-      lorryNumber: 'MH12AB1234',
-      unloadDate: '2023-10-27',
-      buyingDate: '2023-10-26',
-      bargainDate: '2023-10-25',
-      billName: 'Bill-001',
-      billNumber: 'B001',
-      itemName: 'Steel Bars',
-      quantity: 100,
-      amount: 50000,
-      commission: 50,
-      totalCommission: 5000
-    }
-  ])
+  // Separate lorry lists for seller and buyer modes
+  const [sellerLorries, setSellerLorries] = useState<Lorry[]>([])
+
+  const [buyerLorries, setBuyerLorries] = useState<Lorry[]>([])
 
   const addSeller = async (seller: Omit<Seller, 'id'>) => {
     // The seller is already added to backend by SellerForm, just refresh the list
@@ -167,26 +190,285 @@ export default function Home() {
     }
   }
 
-  const addLorry = (lorry: Omit<Lorry, 'id' | 'sellerName' | 'totalCommission'>) => {
-    const seller = sellers.find(s => s.id === parseInt(lorry.sellerId.toString()))
-    setLorries([...lorries, { 
+  const addLorry = async (lorry: Omit<Lorry, 'id' | 'sellerName' | 'totalCommission'>, mode: 'seller' | 'buyer' = 'seller') => {
+    const newLorry = { 
       ...lorry, 
       id: Date.now(), 
-      sellerName: seller?.name || '',
+      sellerName: '',
       totalCommission: lorry.quantity * lorry.commission 
-    }])
+    }
+
+    let sellerName = ''
+    let buyerName = ''
+
+    if (mode === 'seller') {
+      const seller = sellers.find(s => s.id.toString() === lorry.sellerId.toString())
+      newLorry.sellerName = seller?.name || ''
+      sellerName = seller?.name || ''
+      buyerName = lorry.counterpartyName
+      setSellerLorries([...sellerLorries, newLorry])
+    } else {
+      // In buyer mode: buyer is the main entity, seller is the counterparty
+      const buyer = buyers.find(b => b.id.toString() === lorry.sellerId.toString())
+      buyerName = buyer?.name || ''
+      sellerName = lorry.counterpartyName // counterpartyName is the seller in buyer mode
+      newLorry.sellerName = sellerName // Store seller name in sellerName field
+      setBuyerLorries([...buyerLorries, newLorry])
+    }
+
+    // Auto-update ledger: set loaded = "Yes" for this seller-buyer combination
+    await updateLedgerLoadedStatus(sellerName, buyerName)
   }
 
-  const deleteSeller = (id: number) => {
-    setSellers(sellers.filter(s => s.id !== id))
+  const updateLedgerLoadedStatus = async (sellerName: string, buyerName: string) => {
+    try {
+      // Find existing ledger entry for this seller-buyer combination
+      const existingEntry = ledgerEntries.find(
+        entry => entry.sellerName === sellerName && entry.buyerName === buyerName
+      )
+
+      if (existingEntry) {
+        // Update existing entry to loaded = "Yes"
+        await apiClient.put(`/ledger/${existingEntry.id}`, {
+          sellerName: existingEntry.sellerName,
+          buyerName: existingEntry.buyerName,
+          loaded: 'Yes',
+          conditionFromDate: existingEntry.conditionFromDate,
+          conditionToDate: existingEntry.conditionToDate
+        })
+      } else {
+        // Create new entry with loaded = "Yes"
+        const today = new Date().toISOString().split('T')[0]
+        await apiClient.post('/ledger', {
+          sellerName,
+          buyerName,
+          loaded: 'Yes',
+          conditionFromDate: today,
+          conditionToDate: today
+        })
+      }
+
+      // Refresh ledger entries
+      const response = await apiClient.get('/ledger')
+      if (response.success && response.data) {
+        const mappedLedger = response.data.map((entry: any) => ({
+          id: entry._id || entry.id,
+          sellerName: entry.sellerName,
+          buyerName: entry.buyerName,
+          loaded: entry.loaded,
+          conditionFromDate: entry.conditionFromDate,
+          conditionToDate: entry.conditionToDate
+        }))
+        setLedgerEntries(mappedLedger)
+      }
+    } catch (error) {
+      console.error('Failed to update ledger loaded status:', error)
+    }
   }
 
-  const deleteBuyer = (id: number) => {
-    setBuyers(buyers.filter(b => b.id !== id))
+  const deleteSeller = async (id: number | string) => {
+    try {
+      const result = await apiClient.delete(`/sellers/${id}`)
+      console.log('Delete result:', result)
+      
+      if (result.success) {
+        // Refresh the sellers list after deletion
+        const response = await apiClient.get('/sellers')
+        if (response.success && response.data) {
+          const mappedSellers = response.data.map((s: any) => ({
+            id: s._id || s.id,
+            name: s.name,
+            address: s.address,
+            mobile: s.contact || s.mobile
+          }))
+          setSellers(mappedSellers)
+          alert('Seller deleted successfully!')
+        }
+      } else {
+        alert(`Failed to delete seller: ${result.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete seller:', error)
+      alert(`Failed to delete seller: ${error instanceof Error ? error.message : 'Please try again.'}`)
+    }
   }
 
-  const deleteLorry = (id: number) => {
-    setLorries(lorries.filter(l => l.id !== id))
+  const deleteBuyer = async (id: number | string) => {
+    try {
+      const result = await apiClient.delete(`/buyers/${id}`)
+      console.log('Delete result:', result)
+      
+      if (result.success) {
+        // Refresh the buyers list after deletion
+        const response = await apiClient.get('/buyers')
+        if (response.success && response.data) {
+          const mappedBuyers = response.data.map((b: any) => ({
+            id: b._id || b.id,
+            name: b.name,
+            address: b.address,
+            mobile: b.contact || b.mobile
+          }))
+          setBuyers(mappedBuyers)
+          alert('Buyer deleted successfully!')
+        }
+      } else {
+        alert(`Failed to delete buyer: ${result.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete buyer:', error)
+      alert(`Failed to delete buyer: ${error instanceof Error ? error.message : 'Please try again.'}`)
+    }
+  }
+
+  const updateSeller = async (id: number | string, updatedData: Partial<Seller>) => {
+    try {
+      // Prepare data for backend (map mobile to contact)
+      const backendData = {
+        name: updatedData.name,
+        address: updatedData.address,
+        contact: updatedData.mobile,
+        city: updatedData.city,
+        gst_number: updatedData.gst_number
+      }
+      
+      await apiClient.put(`/sellers/${id}`, backendData)
+      
+      // Refresh the sellers list after update
+      const response = await apiClient.get('/sellers')
+      if (response.success && response.data) {
+        const mappedSellers = response.data.map((s: any) => ({
+          id: s._id || s.id,
+          name: s.name,
+          address: s.address,
+          mobile: s.contact || s.mobile
+        }))
+        setSellers(mappedSellers)
+      }
+    } catch (error) {
+      console.error('Failed to update seller:', error)
+      alert('Failed to update seller. Please try again.')
+    }
+  }
+
+  const updateBuyer = async (id: number | string, updatedData: Partial<Buyer>) => {
+    try {
+      // Prepare data for backend (map mobile to contact)
+      const backendData = {
+        name: updatedData.name,
+        address: updatedData.address,
+        contact: updatedData.mobile,
+        city: updatedData.city,
+        gst_number: updatedData.gst_number
+      }
+      
+      await apiClient.put(`/buyers/${id}`, backendData)
+      
+      // Refresh the buyers list after update
+      const response = await apiClient.get('/buyers')
+      if (response.success && response.data) {
+        const mappedBuyers = response.data.map((b: any) => ({
+          id: b._id || b.id,
+          name: b.name,
+          address: b.address,
+          mobile: b.contact || b.mobile
+        }))
+        setBuyers(mappedBuyers)
+      }
+    } catch (error) {
+      console.error('Failed to update buyer:', error)
+      alert('Failed to update buyer. Please try again.')
+    }
+  }
+
+  const deleteLorry = (id: number, mode: 'seller' | 'buyer' = 'seller') => {
+    if (mode === 'seller') {
+      setSellerLorries(sellerLorries.filter((l: Lorry) => l.id !== id))
+    } else {
+      setBuyerLorries(buyerLorries.filter((l: Lorry) => l.id !== id))
+    }
+  }
+
+  const addLedgerEntry = async (entry: Omit<LedgerEntry, 'id'>) => {
+    try {
+      await apiClient.post('/ledger', entry)
+      
+      // Refresh ledger entries
+      const response = await apiClient.get('/ledger')
+      if (response.success && response.data) {
+        const mappedLedger = response.data.map((e: any) => ({
+          id: e._id || e.id,
+          sellerName: e.sellerName,
+          buyerName: e.buyerName,
+          loaded: e.loaded,
+          conditionFromDate: e.conditionFromDate,
+          conditionToDate: e.conditionToDate
+        }))
+        setLedgerEntries(mappedLedger)
+      }
+    } catch (error) {
+      console.error('Failed to add ledger entry:', error)
+      alert('Failed to add ledger entry. Please try again.')
+    }
+  }
+
+  const updateLedgerEntry = async (id: number | string, updatedData: Partial<LedgerEntry>) => {
+    try {
+      const backendData = {
+        sellerName: updatedData.sellerName,
+        buyerName: updatedData.buyerName,
+        loaded: updatedData.loaded,
+        conditionFromDate: updatedData.conditionFromDate,
+        conditionToDate: updatedData.conditionToDate
+      }
+      
+      await apiClient.put(`/ledger/${id}`, backendData)
+      
+      // Refresh ledger entries
+      const response = await apiClient.get('/ledger')
+      if (response.success && response.data) {
+        const mappedLedger = response.data.map((e: any) => ({
+          id: e._id || e.id,
+          sellerName: e.sellerName,
+          buyerName: e.buyerName,
+          loaded: e.loaded,
+          conditionFromDate: e.conditionFromDate,
+          conditionToDate: e.conditionToDate
+        }))
+        setLedgerEntries(mappedLedger)
+      }
+    } catch (error) {
+      console.error('Failed to update ledger entry:', error)
+      alert('Failed to update ledger entry. Please try again.')
+    }
+  }
+
+  const deleteLedgerEntry = async (id: number | string) => {
+    try {
+      const result = await apiClient.delete(`/ledger/${id}`)
+      console.log('Delete result:', result)
+      
+      if (result.success) {
+        // Refresh ledger entries
+        const response = await apiClient.get('/ledger')
+        if (response.success && response.data) {
+          const mappedLedger = response.data.map((e: any) => ({
+            id: e._id || e.id,
+            sellerName: e.sellerName,
+            buyerName: e.buyerName,
+            loaded: e.loaded,
+            conditionFromDate: e.conditionFromDate,
+            conditionToDate: e.conditionToDate
+          }))
+          setLedgerEntries(mappedLedger)
+          alert('Ledger entry deleted successfully!')
+        }
+      } else {
+        alert(`Failed to delete ledger entry: ${result.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete ledger entry:', error)
+      alert(`Failed to delete ledger entry: ${error instanceof Error ? error.message : 'Please try again.'}`)
+    }
   }
 
   return (
@@ -209,15 +491,16 @@ export default function Home() {
               {activePage === 'seller' && (
                 <>
                   <SellerForm onAddSeller={addSeller} onViewDetails={handleViewSellerDetails} />
-                  <LorryForm sellers={sellers} onAddLorry={addLorry} mode="seller" />
+                  <LorryForm sellers={sellers} onAddLorry={(lorry) => addLorry(lorry, 'seller')} mode="seller" />
                   <div id="details-section">
                     <DataTable 
                       sellers={sellers}
-                      lorries={lorries}
+                      lorries={sellerLorries}
                       activeTab={activeTab}
                       setActiveTab={setActiveTab}
                       onDeleteSeller={deleteSeller}
-                      onDeleteLorry={deleteLorry}
+                      onEditSeller={updateSeller}
+                      onDeleteLorry={(id) => deleteLorry(id, 'seller')}
                       mode="seller"
                     />
                   </div>
@@ -227,15 +510,16 @@ export default function Home() {
               {activePage === 'buyer' && (
                 <>
                   <BuyerForm onAddBuyer={addBuyer} onViewDetails={handleViewLorryDetails} />
-                  <LorryForm buyers={buyers} onAddLorry={addLorry} mode="buyer" />
+                  <LorryForm buyers={buyers} onAddLorry={(lorry) => addLorry(lorry, 'buyer')} mode="buyer" />
                   <div id="details-section">
                     <DataTable 
                       buyers={buyers}
-                      lorries={lorries}
+                      lorries={buyerLorries}
                       activeTab={activeTab}
                       setActiveTab={setActiveTab}
                       onDeleteBuyer={deleteBuyer}
-                      onDeleteLorry={deleteLorry}
+                      onEditBuyer={updateBuyer}
+                      onDeleteLorry={(id) => deleteLorry(id, 'buyer')}
                       mode="buyer"
                     />
                   </div>
@@ -246,7 +530,7 @@ export default function Home() {
                 <BillingPage 
                   sellers={sellers}
                   buyers={buyers}
-                  lorries={lorries}
+                  lorries={[...sellerLorries, ...buyerLorries]}
                 />
               )}
 
@@ -254,6 +538,10 @@ export default function Home() {
                 <DailyLedgerPage 
                   sellers={sellers}
                   buyers={buyers}
+                  ledgerEntries={ledgerEntries}
+                  onAddLedger={addLedgerEntry}
+                  onEditLedger={updateLedgerEntry}
+                  onDeleteLedger={deleteLedgerEntry}
                 />
               )}
             </main>

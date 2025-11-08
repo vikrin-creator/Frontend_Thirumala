@@ -3,14 +3,14 @@
 import React, { useState } from 'react'
 
 interface Seller {
-  id: number
+  id: number | string
   name: string
   address: string
   mobile: string
 }
 
 interface Buyer {
-  id: number
+  id: number | string
   name: string
   address: string
   mobile: string
@@ -18,12 +18,14 @@ interface Buyer {
 
 interface Lorry {
   id: number
-  sellerId: number
+  sellerId: number | string
   sellerName: string
   lorryNumber: string
+  counterpartyName: string
   unloadDate: string
   buyingDate: string
   bargainDate: string
+  billType: string
   billName: string
   billNumber: string
   itemName: string
@@ -118,6 +120,219 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
 
     setGeneratedBills(prev => [newBill, ...prev])
     alert(`${billType} generated for ${buyer.name} - Amount: ₹${totalAmountForBuyer.toLocaleString()}`)
+  }
+
+  const handlePrintBill = (bill: any) => {
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600')
+    if (!printWindow) {
+      alert('Please allow pop-ups to print the bill')
+      return
+    }
+
+    // Calculate total commission for all items
+    const totalCommission = bill.items.reduce((sum: number, item: any) => sum + item.totalCommission, 0)
+    const totalAmount = bill.items.reduce((sum: number, item: any) => sum + item.amount, 0)
+
+    // Generate HTML content
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Bill - ${bill.billNumber}</title>
+        <style>
+          @media print {
+            @page { margin: 1cm; }
+            body { margin: 0; }
+          }
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: white;
+            color: black;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+          }
+          .bill-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f5f5f5;
+          }
+          .bill-info div {
+            flex: 1;
+          }
+          .bill-info strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 12px;
+          }
+          th {
+            background-color: #333;
+            color: white;
+            padding: 10px 5px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #333;
+          }
+          td {
+            padding: 8px 5px;
+            border: 1px solid #ddd;
+          }
+          tr:nth-child(even) {
+            background-color: #f9f9f9;
+          }
+          .totals {
+            margin-top: 20px;
+            text-align: right;
+            font-size: 14px;
+          }
+          .totals div {
+            margin: 5px 0;
+            padding: 5px 10px;
+          }
+          .totals .grand-total {
+            font-size: 16px;
+            font-weight: bold;
+            background: #333;
+            color: white;
+            padding: 10px;
+            margin-top: 10px;
+          }
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+          }
+          .print-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+          }
+          .print-btn:hover {
+            background: #45a049;
+          }
+          @media print {
+            .print-btn { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+        
+        <div class="header">
+          <h1>THIRUMALA BROKER</h1>
+          <p>Bill Document</p>
+        </div>
+
+        <div class="bill-info">
+          <div>
+            <strong>Bill Number:</strong>
+            ${bill.billNumber}
+          </div>
+          <div>
+            <strong>Party Name:</strong>
+            ${bill.party}
+          </div>
+          <div>
+            <strong>Party Type:</strong>
+            ${bill.partyType === 'seller' ? 'Seller' : 'Buyer'}
+          </div>
+          <div>
+            <strong>Generated Date:</strong>
+            ${bill.date}
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Lorry No.</th>
+              <th>${bill.partyType === 'seller' ? 'Buyer Name' : 'Seller Name'}</th>
+              <th>Unload Date</th>
+              <th>Buying Date</th>
+              <th>Bargain Date</th>
+              <th>Bill Type</th>
+              <th>Bill Name</th>
+              <th>Bill Number</th>
+              <th>Item</th>
+              <th>Quantity</th>
+              <th>Amount</th>
+              <th>Commission</th>
+              <th>Total Commission</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${bill.items.map((item: any, index: number) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${item.lorryNumber}</td>
+                <td>${item.counterpartyName}</td>
+                <td>${item.unloadDate}</td>
+                <td>${item.buyingDate}</td>
+                <td>${item.bargainDate}</td>
+                <td>${item.billType || 'local'}</td>
+                <td>${item.billName || '-'}</td>
+                <td>${item.billNumber || '-'}</td>
+                <td>${item.itemName}</td>
+                <td>${item.quantity}</td>
+                <td>₹${item.amount.toLocaleString()}</td>
+                <td>₹${item.commission.toLocaleString()}</td>
+                <td>₹${item.totalCommission.toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="totals">
+          <div><strong>Total Amount:</strong> ₹${totalAmount.toLocaleString()}</div>
+          <div class="grand-total">
+            <strong>Grand Total Commission:</strong> ₹${totalCommission.toLocaleString()}
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>This is a computer-generated bill. Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+          <p>Thirumala Broker - Contact: [Your Contact Info]</p>
+        </div>
+
+        <script>
+          // Auto print when page loads (optional)
+          // window.onload = function() { window.print(); }
+        </script>
+      </body>
+      </html>
+    `
+
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
   }
 
   return (
@@ -216,23 +431,12 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
 
                 {/* Bill Generation Buttons */}
                 {selectedSeller && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <button
                       onClick={() => generateSellerBill(selectedSeller, 'Seller Bill')}
                       className="bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors font-medium"
                     >
                       Generate Bill
-                    </button>
-                    <button
-                      onClick={() => {
-                        const seller = sellers.find(s => s.id.toString() === selectedSeller)
-                        if (seller) {
-                          alert(`Printing bill for ${seller.name}...`)
-                        }
-                      }}
-                      className="bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-                    >
-                      Print Bill
                     </button>
                   </div>
                 )}
@@ -310,23 +514,12 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
 
                 {/* Bill Generation Buttons */}
                 {selectedBuyer && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <button
                       onClick={() => generateBuyerBill(selectedBuyer, 'Buyer Bill')}
                       className="bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors font-medium"
                     >
                       Generate Bill
-                    </button>
-                    <button
-                      onClick={() => {
-                        const buyer = buyers.find(b => b.id.toString() === selectedBuyer)
-                        if (buyer) {
-                          alert(`Printing bill for ${buyer.name}...`)
-                        }
-                      }}
-                      className="bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-                    >
-                      Print Bill
                     </button>
                   </div>
                 )}
@@ -346,73 +539,108 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
           <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
             Generated Bills & Lorry Details
           </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-gray-50/70 dark:bg-gray-800/50">
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Number</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Party</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Lorry Number</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Unload Date</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Buying Date</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bargain Date</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
-                    {activeBillTab === 'seller' ? 'Buyer Name' : 'Seller Name'}
-                  </th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Type</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Name</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Number (Lorry)</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Item Name</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Quantity</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Amount</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Commission</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Total Commission</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Generated Date</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200/50 dark:divide-gray-700/50">
-                {generatedBills.length > 0 ? generatedBills.flatMap((bill) => 
-                  bill.items.map((lorry: any, index: number) => (
-                    <tr key={`${bill.id}-${lorry.id || index}`}>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100 font-medium">{bill.billNumber}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{bill.party}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.lorryNumber}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.unloadDate}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.buyingDate}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.bargainDate}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">
-                        {bill.partyType === 'seller' 
-                          ? bill.partyName
-                          : bill.partyName
-                        }
-                      </td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billType || 'local'}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billName || '-'}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billNumber || '-'}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.itemName}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.quantity}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100 font-medium">₹{lorry.amount.toLocaleString()}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.commission.toLocaleString()}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100 font-medium">₹{lorry.totalCommission.toLocaleString()}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{bill.date}</td>
-                      <td className="p-3">
-                        <button className="text-primary hover:text-primary/80 text-sm font-medium">
-                          View/Print
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td className="p-3 text-sm text-gray-600 dark:text-gray-300 text-center" colSpan={17}>
-                      No bills generated yet. Select a seller or buyer and generate bills.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          
+          {generatedBills.length > 0 ? generatedBills.map((bill) => {
+            const totalAmount = bill.items.reduce((sum: number, item: any) => sum + item.amount, 0)
+            const totalCommission = bill.items.reduce((sum: number, item: any) => sum + item.totalCommission, 0)
+            
+            return (
+              <div key={bill.id} className="mb-6 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                {/* Bill Header */}
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 flex justify-between items-center">
+                  <div className="flex gap-6">
+                    <div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Bill Number:</span>
+                      <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{bill.billNumber}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Party Name:</span>
+                      <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{bill.party}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Type:</span>
+                      <p className="text-sm">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                          bill.partyType === 'seller' 
+                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' 
+                            : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                        }`}>
+                          {bill.partyType === 'seller' ? 'Seller' : 'Buyer'}
+                        </span>
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Date:</span>
+                      <p className="text-sm text-gray-800 dark:text-gray-100">{bill.date}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handlePrintBill(bill)}
+                    className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 text-sm font-medium transition-colors"
+                  >
+                    🖨️ View/Print Bill
+                  </button>
+                </div>
+
+                {/* Lorries Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="bg-gray-100 dark:bg-gray-700">
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Lorry Number</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                          {bill.partyType === 'seller' ? 'Buyer Name' : 'Seller Name'}
+                        </th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Unload Date</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Buying Date</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bargain Date</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Type</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Name</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Number</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Item Name</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Quantity</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Amount</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Commission</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Total Commission</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                      {bill.items.map((lorry: any, index: number) => (
+                        <tr key={`${bill.id}-${lorry.id || index}`}>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.lorryNumber}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.counterpartyName}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.unloadDate}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.buyingDate}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.bargainDate}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billType || 'local'}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billName || '-'}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billNumber || '-'}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.itemName}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.quantity}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.amount.toLocaleString()}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.commission.toLocaleString()}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.totalCommission.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                      {/* Totals Row */}
+                      <tr className="bg-gray-50 dark:bg-gray-800 font-bold">
+                        <td colSpan={10} className="p-3 text-right text-sm text-gray-800 dark:text-gray-100">
+                          TOTAL ({bill.items.length} Lorries):
+                        </td>
+                        <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{totalAmount.toLocaleString()}</td>
+                        <td className="p-3 text-sm text-gray-800 dark:text-gray-100"></td>
+                        <td className="p-3 text-sm text-green-600 dark:text-green-400">₹{totalCommission.toLocaleString()}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          }) : (
+            <div className="text-center py-12 text-gray-600 dark:text-gray-300">
+              No bills generated yet. Select a seller or buyer and generate bills.
+            </div>
+          )}
         </div>
     </div>
   )

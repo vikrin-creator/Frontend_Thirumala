@@ -1,22 +1,26 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 
 interface Seller {
-  id: number
+  id: number | string
   name: string
   address: string
   mobile: string
+  city?: string
+  gst_number?: string
 }
 
 interface Lorry {
   id: number
-  sellerId: number
+  sellerId: number | string
   sellerName: string
   lorryNumber: string
+  counterpartyName: string
   unloadDate: string
   buyingDate: string
   bargainDate: string
+  billType: string
   billName: string
   billNumber: string
   itemName: string
@@ -27,10 +31,12 @@ interface Lorry {
 }
 
 interface Buyer {
-  id: number
+  id: number | string
   name: string
   address: string
   mobile: string
+  city?: string
+  gst_number?: string
 }
 
 interface DataTableProps {
@@ -39,8 +45,10 @@ interface DataTableProps {
   lorries: Lorry[]
   activeTab: string
   setActiveTab: (tab: string) => void
-  onDeleteSeller?: (id: number) => void
-  onDeleteBuyer?: (id: number) => void
+  onDeleteSeller?: (id: number | string) => void
+  onDeleteBuyer?: (id: number | string) => void
+  onEditSeller?: (id: number | string, data: Partial<Seller>) => void
+  onEditBuyer?: (id: number | string, data: Partial<Buyer>) => void
   onDeleteLorry: (id: number) => void
   mode: 'seller' | 'buyer'
 }
@@ -53,9 +61,40 @@ export default function DataTable({
   setActiveTab, 
   onDeleteSeller, 
   onDeleteBuyer,
+  onEditSeller,
+  onEditBuyer,
   onDeleteLorry,
   mode 
 }: DataTableProps) {
+  const [editingId, setEditingId] = useState<number | string | null>(null)
+  const [editFormData, setEditFormData] = useState<Partial<Seller | Buyer>>({})
+
+  const handleEditClick = (item: Seller | Buyer) => {
+    setEditingId(item.id)
+    setEditFormData({
+      name: item.name,
+      address: item.address,
+      mobile: item.mobile,
+      city: item.city,
+      gst_number: item.gst_number
+    })
+  }
+
+  const handleSaveEdit = (id: number | string) => {
+    if (mode === 'seller' && onEditSeller) {
+      onEditSeller(id, editFormData)
+    } else if (mode === 'buyer' && onEditBuyer) {
+      onEditBuyer(id, editFormData)
+    }
+    setEditingId(null)
+    setEditFormData({})
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setEditFormData({})
+  }
+
   return (
     <div className="form-container">
       <h2 className="text-gray-800 dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-0 pb-4">
@@ -94,43 +133,143 @@ export default function DataTable({
                 {mode === 'seller' ? (
                   sellers.map((seller) => (
                     <tr key={seller.id}>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{seller.name}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{seller.address}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{seller.mobile}</td>
-                      <td className="p-3">
-                        <div className="flex justify-end gap-2">
-                          <button className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                            ✏️ Edit
-                          </button>
-                          <button 
-                            onClick={() => onDeleteSeller?.(seller.id)}
-                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
-                          >
-                            🗑️ Delete
-                          </button>
-                        </div>
-                      </td>
+                      {editingId === seller.id ? (
+                        <>
+                          <td className="p-3">
+                            <input
+                              type="text"
+                              value={editFormData.name || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="text"
+                              value={editFormData.address || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="text"
+                              value={editFormData.mobile || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, mobile: e.target.value })}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => handleSaveEdit(seller.id)}
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-semibold hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+                              >
+                                ✓ Save
+                              </button>
+                              <button 
+                                onClick={handleCancelEdit}
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                              >
+                                ✕ Cancel
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{seller.name}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{seller.address}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{seller.mobile}</td>
+                          <td className="p-3">
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => handleEditClick(seller)}
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                              >
+                                ✏️ Edit
+                              </button>
+                              <button 
+                                onClick={() => onDeleteSeller?.(seller.id)}
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                              >
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))
                 ) : (
                   buyers.map((buyer) => (
                     <tr key={buyer.id}>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{buyer.name}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{buyer.address}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{buyer.mobile}</td>
-                      <td className="p-3">
-                        <div className="flex justify-end gap-2">
-                          <button className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                            ✏️ Edit
-                          </button>
-                          <button 
-                            onClick={() => onDeleteBuyer?.(buyer.id)}
-                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
-                          >
-                            🗑️ Delete
-                          </button>
-                        </div>
-                      </td>
+                      {editingId === buyer.id ? (
+                        <>
+                          <td className="p-3">
+                            <input
+                              type="text"
+                              value={editFormData.name || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="text"
+                              value={editFormData.address || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="text"
+                              value={editFormData.mobile || ''}
+                              onChange={(e) => setEditFormData({ ...editFormData, mobile: e.target.value })}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => handleSaveEdit(buyer.id)}
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-semibold hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+                              >
+                                ✓ Save
+                              </button>
+                              <button 
+                                onClick={handleCancelEdit}
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                              >
+                                ✕ Cancel
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{buyer.name}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{buyer.address}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{buyer.mobile}</td>
+                          <td className="p-3">
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => handleEditClick(buyer)}
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                              >
+                                ✏️ Edit
+                              </button>
+                              <button 
+                                onClick={() => onDeleteBuyer?.(buyer.id)}
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                              >
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))
                 )}
@@ -140,14 +279,23 @@ export default function DataTable({
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/50">
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Seller</th>
+                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                    {mode === 'seller' ? 'Seller' : 'Buyer'}
+                  </th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Lorry No.</th>
+                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                    {mode === 'seller' ? 'Buyer Name' : 'Seller Name'}
+                  </th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Unload Date</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Buying Date</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bargain Date</th>
+                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Type</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Name</th>
+                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Number</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Item</th>
+                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Quantity</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Amount</th>
+                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Commission</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Total Commission</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300 text-right">Actions</th>
                 </tr>
@@ -155,14 +303,31 @@ export default function DataTable({
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {lorries.map((lorry) => (
                   <tr key={lorry.id}>
-                    <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.sellerName}</td>
+                    <td className="p-3 text-sm text-gray-800 dark:text-gray-100">
+                      {mode === 'seller' ? lorry.sellerName : lorry.counterpartyName}
+                    </td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.lorryNumber}</td>
+                    <td className="p-3 text-sm text-gray-800 dark:text-gray-100">
+                      {mode === 'seller' ? lorry.counterpartyName : lorry.sellerName}
+                    </td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.unloadDate}</td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.buyingDate}</td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.bargainDate}</td>
+                    <td className="p-3 text-sm text-gray-800 dark:text-gray-100">
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                        lorry.billType === 'local' 
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
+                          : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                      }`}>
+                        {lorry.billType === 'local' ? 'Local' : 'Imported'}
+                      </span>
+                    </td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billName}</td>
+                    <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billNumber}</td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.itemName}</td>
+                    <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.quantity}</td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.amount.toLocaleString()}</td>
+                    <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.commission.toLocaleString()}</td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.totalCommission.toLocaleString()}</td>
                     <td className="p-3">
                       <div className="flex justify-end gap-2">

@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from 'react'
 
 interface Seller {
-  id: number
+  id: number | string
   name: string
   address: string
   mobile: string
 }
 
 interface Buyer {
-  id: number
+  id: number | string
   name: string
   address: string
   mobile: string

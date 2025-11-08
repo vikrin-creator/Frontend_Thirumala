@@ -3,27 +3,24 @@
 import React, { useState } from 'react'
 
 interface Seller {
-  id: number
+  id: number | string
   name: string
   address: string
   mobile: string
 }
 
 interface Buyer {
-  id: number
+  id: number | string
   name: string
   address: string
   mobile: string
 }
 
 interface LedgerEntry {
-  id: number
-  date: string
-  sellerId: number
+  id: number | string
   sellerName: string
-  buyerId: number
   buyerName: string
-  loaded: string
+  loaded: 'Yes' | 'No'
   conditionFromDate: string
   conditionToDate: string
 }
@@ -31,29 +28,27 @@ interface LedgerEntry {
 interface DailyLedgerPageProps {
   sellers: Seller[]
   buyers: Buyer[]
+  ledgerEntries: LedgerEntry[]
+  onAddLedger: (entry: Omit<LedgerEntry, 'id'>) => void
+  onEditLedger: (id: number | string, data: Partial<LedgerEntry>) => void
+  onDeleteLedger: (id: number | string) => void
 }
 
-export default function DailyLedgerPage({ sellers, buyers }: DailyLedgerPageProps) {
-  // Initialize with sample data to demonstrate the feature
-  const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([
-    {
-      id: 1,
-      date: '2025-11-07',
-      sellerId: sellers[0]?.id || 1,
-      sellerName: sellers[0]?.name || 'Sample Seller',
-      buyerId: buyers[0]?.id || 1,
-      buyerName: buyers[0]?.name || 'Sample Buyer',
-      loaded: 'Sample Load - 100 units',
-      conditionFromDate: '2025-11-01',
-      conditionToDate: '2025-11-15'
-    }
-  ])
+export default function DailyLedgerPage({ 
+  sellers, 
+  buyers,
+  ledgerEntries,
+  onAddLedger,
+  onEditLedger,
+  onDeleteLedger
+}: DailyLedgerPageProps) {
   const [showDetails, setShowDetails] = useState(false)
+  const [editingId, setEditingId] = useState<number | string | null>(null)
+  const [editFormData, setEditFormData] = useState<Partial<LedgerEntry>>({})
   const [formData, setFormData] = useState({
-    date: '',
     sellerName: '',
     buyerName: '',
-    loaded: '',
+    loaded: 'No' as 'Yes' | 'No',
     conditionFromDate: '',
     conditionToDate: ''
   })
@@ -61,27 +56,14 @@ export default function DailyLedgerPage({ sellers, buyers }: DailyLedgerPageProp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (formData.date && formData.sellerName && formData.buyerName && formData.loaded && formData.conditionFromDate && formData.conditionToDate) {
-      const newEntry: LedgerEntry = {
-        id: Date.now(),
-        date: formData.date,
-        sellerId: Date.now(), // Generate a unique ID
-        sellerName: formData.sellerName,
-        buyerId: Date.now() + 1, // Generate a unique ID
-        buyerName: formData.buyerName,
-        loaded: formData.loaded,
-        conditionFromDate: formData.conditionFromDate,
-        conditionToDate: formData.conditionToDate
-      }
-      
-      setLedgerEntries([...ledgerEntries, newEntry])
+    if (formData.sellerName && formData.buyerName && formData.conditionFromDate && formData.conditionToDate) {
+      onAddLedger(formData)
       
       // Reset form
       setFormData({
-        date: '',
         sellerName: '',
         buyerName: '',
-        loaded: '',
+        loaded: 'No',
         conditionFromDate: '',
         conditionToDate: ''
       })
@@ -95,17 +77,30 @@ export default function DailyLedgerPage({ sellers, buyers }: DailyLedgerPageProp
     })
   }
 
-  const handleDelete = (id: number) => {
-    setLedgerEntries(ledgerEntries.filter(entry => entry.id !== id))
+  const handleEditClick = (entry: LedgerEntry) => {
+    setEditingId(entry.id)
+    setEditFormData({
+      sellerName: entry.sellerName,
+      buyerName: entry.buyerName,
+      loaded: entry.loaded,
+      conditionFromDate: entry.conditionFromDate,
+      conditionToDate: entry.conditionToDate
+    })
   }
 
-  // Get seller and buyer details
-  const getSellerDetails = (sellerId: number) => {
-    return sellers.find(s => s.id === sellerId)
+  const handleSaveEdit = (id: number | string) => {
+    onEditLedger(id, editFormData)
+    setEditingId(null)
+    setEditFormData({})
   }
 
-  const getBuyerDetails = (buyerId: number) => {
-    return buyers.find(b => b.id === buyerId)
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setEditFormData({})
+  }
+
+  const handleDelete = (id: number | string) => {
+    onDeleteLedger(id)
   }
 
   return (
@@ -118,67 +113,63 @@ export default function DailyLedgerPage({ sellers, buyers }: DailyLedgerPageProp
         
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Date Field */}
-            <label className="flex flex-col w-full">
-              <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
-                Date <span className="text-red-500">*</span>
-              </p>
-              <input 
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 placeholder:text-gray-500 dark:placeholder-gray-400 p-3 text-base font-normal leading-normal" 
-                type="date"
-                required
-              />
-            </label>
-
-            {/* Seller Input */}
+            {/* Seller Dropdown */}
             <label className="flex flex-col w-full">
               <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
                 Seller <span className="text-red-500">*</span>
               </p>
-              <input
+              <select
                 name="sellerName"
                 value={formData.sellerName}
                 onChange={handleChange}
-                className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 placeholder:text-gray-500 dark:placeholder-gray-400 p-3 text-base font-normal leading-normal"
-                placeholder="Enter seller name"
-                type="text"
+                className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 p-3 text-base font-normal leading-normal"
                 required
-              />
+              >
+                <option value="">Select Seller</option>
+                {sellers.map((seller) => (
+                  <option key={seller.id} value={seller.name}>
+                    {seller.name}
+                  </option>
+                ))}
+              </select>
             </label>
 
-            {/* Buyer Input */}
+            {/* Buyer Dropdown */}
             <label className="flex flex-col w-full">
               <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
                 Buyer <span className="text-red-500">*</span>
               </p>
-              <input
+              <select
                 name="buyerName"
                 value={formData.buyerName}
                 onChange={handleChange}
-                className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 placeholder:text-gray-500 dark:placeholder-gray-400 p-3 text-base font-normal leading-normal"
-                placeholder="Enter buyer name"
-                type="text"
+                className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 p-3 text-base font-normal leading-normal"
                 required
-              />
+              >
+                <option value="">Select Buyer</option>
+                {buyers.map((buyer) => (
+                  <option key={buyer.id} value={buyer.name}>
+                    {buyer.name}
+                  </option>
+                ))}
+              </select>
             </label>
 
-            {/* Loaded Field */}
+            {/* Loaded Status Dropdown */}
             <label className="flex flex-col w-full">
               <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
-                Loaded <span className="text-red-500">*</span>
+                Loaded Status <span className="text-red-500">*</span>
               </p>
-              <input 
+              <select
                 name="loaded"
                 value={formData.loaded}
                 onChange={handleChange}
-                className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 placeholder:text-gray-500 dark:placeholder-gray-400 p-3 text-base font-normal leading-normal" 
-                placeholder="Enter loaded details"
-                type="text"
+                className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 p-3 text-base font-normal leading-normal"
                 required
-              />
+              >
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
             </label>
 
             {/* Condition From Date */}
@@ -246,7 +237,6 @@ export default function DailyLedgerPage({ sellers, buyers }: DailyLedgerPageProp
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b-2 border-gray-300 dark:border-gray-600">
-                  <th className="text-left p-3 text-gray-900 dark:text-gray-100 font-semibold text-sm">Date</th>
                   <th className="text-left p-3 text-gray-900 dark:text-gray-100 font-semibold text-sm">Seller</th>
                   <th className="text-left p-3 text-gray-900 dark:text-gray-100 font-semibold text-sm">Buyer</th>
                   <th className="text-left p-3 text-gray-900 dark:text-gray-100 font-semibold text-sm">Loaded</th>
@@ -258,31 +248,42 @@ export default function DailyLedgerPage({ sellers, buyers }: DailyLedgerPageProp
               <tbody>
                 {ledgerEntries.map((entry) => (
                   <tr key={entry.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="p-3 text-gray-800 dark:text-gray-200 text-sm">
-                      {new Date(entry.date).toLocaleDateString()}
-                    </td>
                     <td className="p-3 text-gray-800 dark:text-gray-200 text-sm font-medium">
                       {entry.sellerName}
                     </td>
                     <td className="p-3 text-gray-800 dark:text-gray-200 text-sm font-medium">
                       {entry.buyerName}
                     </td>
-                    <td className="p-3 text-gray-800 dark:text-gray-200 text-sm">
-                      {entry.loaded}
+                    <td className="p-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        entry.loaded === 'Yes' 
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                      }`}>
+                        {entry.loaded}
+                      </span>
                     </td>
                     <td className="p-3 text-gray-800 dark:text-gray-200 text-sm">
-                      {new Date(entry.conditionFromDate).toLocaleDateString()}
+                      {entry.conditionFromDate}
                     </td>
                     <td className="p-3 text-gray-800 dark:text-gray-200 text-sm">
-                      {new Date(entry.conditionToDate).toLocaleDateString()}
+                      {entry.conditionToDate}
                     </td>
                     <td className="p-3 text-center">
-                      <button
-                        onClick={() => handleDelete(entry.id)}
-                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors duration-200"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => handleEditClick(entry)}
+                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(entry.id)}
+                          className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm font-medium transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

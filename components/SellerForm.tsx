@@ -24,8 +24,12 @@ export default function SellerForm({ onAddSeller, onViewDetails }: SellerFormPro
       setError(null)
       
       try {
-        // Send data to backend API
-        const response = await apiClient.post('/sellers', formData)
+        // Send data to backend API with 'contact' field instead of 'mobile'
+        const response = await apiClient.post('/sellers', {
+          name: formData.name,
+          address: formData.address,
+          contact: formData.mobile
+        })
         
         // Call the parent callback with the response data
         onAddSeller(response.data || { ...formData, id: Date.now() })

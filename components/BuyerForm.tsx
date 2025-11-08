@@ -24,8 +24,12 @@ export default function BuyerForm({ onAddBuyer, onViewDetails }: BuyerFormProps)
       setError(null)
       
       try {
-        // Send data to backend API
-        const response = await apiClient.post('/buyers', formData)
+        // Send data to backend API with 'contact' field instead of 'mobile'
+        const response = await apiClient.post('/buyers', {
+          name: formData.name,
+          address: formData.address,
+          contact: formData.mobile
+        })
         
         // Call the parent callback with the response data
         onAddBuyer(response.data || { ...formData, id: Date.now() })
