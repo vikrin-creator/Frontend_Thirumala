@@ -46,3 +46,6 @@ logs
 # Cache
 .cache/
 .parcel-cache/
+
+Thirumala_Backend/
+api-test/
