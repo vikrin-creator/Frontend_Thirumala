@@ -140,9 +140,53 @@ export default function Home() {
       }
     }
 
+    const fetchLorries = async () => {
+      try {
+        const response = await apiClient.get('/lorries')
+        if (response.success && response.data) {
+          // Separate lorries by mode
+          const sellerLorryList: Lorry[] = []
+          const buyerLorryList: Lorry[] = []
+          
+          response.data.forEach((lorry: any) => {
+            const mappedLorry = {
+              id: lorry._id || lorry.id,
+              sellerId: lorry.sellerId,
+              sellerName: lorry.sellerName,
+              lorryNumber: lorry.lorryNumber,
+              counterpartyName: lorry.counterpartyName,
+              unloadDate: lorry.unloadDate,
+              buyingDate: lorry.buyingDate,
+              bargainDate: lorry.bargainDate,
+              billType: lorry.billType,
+              billName: lorry.billName,
+              billNumber: lorry.billNumber,
+              itemName: lorry.itemName,
+              quantity: lorry.quantity,
+              amount: lorry.amount,
+              commission: lorry.commission,
+              totalCommission: lorry.totalCommission
+            }
+            
+            if (lorry.mode === 'seller') {
+              sellerLorryList.push(mappedLorry)
+            } else {
+              buyerLorryList.push(mappedLorry)
+            }
+          })
+          
+          setSellerLorries(sellerLorryList)
+          setBuyerLorries(buyerLorryList)
+        }
+      } catch (error) {
+        console.error('Failed to fetch lorries:', error)
+      }
+    }
+
     fetchSellers()
     fetchBuyers()
     fetchLedger()
+    fetchLorries()
   }, [])
 
   // Separate lorry lists for seller and buyer modes
@@ -191,33 +235,60 @@ export default function Home() {
   }
 
   const addLorry = async (lorry: Omit<Lorry, 'id' | 'sellerName' | 'totalCommission'>, mode: 'seller' | 'buyer' = 'seller') => {
-    const newLorry = { 
-      ...lorry, 
-      id: Date.now(), 
-      sellerName: '',
-      totalCommission: lorry.quantity * lorry.commission 
+    try {
+      const newLorry = { 
+        ...lorry, 
+        id: Date.now(), 
+        sellerName: '',
+        totalCommission: lorry.quantity * lorry.commission 
+      }
+
+      let sellerName = ''
+      let buyerName = ''
+
+      if (mode === 'seller') {
+        const seller = sellers.find(s => s.id.toString() === lorry.sellerId.toString())
+        newLorry.sellerName = seller?.name || ''
+        sellerName = seller?.name || ''
+        buyerName = lorry.counterpartyName
+      } else {
+        // In buyer mode: buyer is the main entity, seller is the counterparty
+        const buyer = buyers.find(b => b.id.toString() === lorry.sellerId.toString())
+        buyerName = buyer?.name || ''
+        sellerName = lorry.counterpartyName // counterpartyName is the seller in buyer mode
+        newLorry.sellerName = sellerName // Store seller name in sellerName field
+      }
+
+      // Save lorry to backend with mode information
+      const lorryData = {
+        ...newLorry,
+        mode, // Add mode to identify if this is a seller lorry or buyer lorry
+        sellerName,
+        buyerName
+      }
+      
+      const response = await apiClient.post('/lorries', lorryData)
+      
+      if (response.success && response.data) {
+        // Update local state with the backend-generated ID
+        const savedLorry = {
+          ...newLorry,
+          id: response.data._id || response.data.id
+        }
+        
+        if (mode === 'seller') {
+          setSellerLorries([...sellerLorries, savedLorry])
+        } else {
+          setBuyerLorries([...buyerLorries, savedLorry])
+        }
+
+        // Auto-update ledger: set loaded = "Yes" for this seller-buyer combination
+        await updateLedgerLoadedStatus(sellerName, buyerName)
+      }
+    } catch (error) {
+      console.error('Failed to add lorry:', error)
+      alert('Failed to save lorry. Please try again.')
     }
-
-    let sellerName = ''
-    let buyerName = ''
-
-    if (mode === 'seller') {
-      const seller = sellers.find(s => s.id.toString() === lorry.sellerId.toString())
-      newLorry.sellerName = seller?.name || ''
-      sellerName = seller?.name || ''
-      buyerName = lorry.counterpartyName
-      setSellerLorries([...sellerLorries, newLorry])
-    } else {
-      // In buyer mode: buyer is the main entity, seller is the counterparty
-      const buyer = buyers.find(b => b.id.toString() === lorry.sellerId.toString())
-      buyerName = buyer?.name || ''
-      sellerName = lorry.counterpartyName // counterpartyName is the seller in buyer mode
-      newLorry.sellerName = sellerName // Store seller name in sellerName field
-      setBuyerLorries([...buyerLorries, newLorry])
-    }
-
-    // Auto-update ledger: set loaded = "Yes" for this seller-buyer combination
-    await updateLedgerLoadedStatus(sellerName, buyerName)
   }
 
   const updateLedgerLoadedStatus = async (sellerName: string, buyerName: string) => {
@@ -380,11 +451,20 @@ export default function Home() {
     }
   }
 
-  const deleteLorry = (id: number, mode: 'seller' | 'buyer' = 'seller') => {
-    if (mode === 'seller') {
-      setSellerLorries(sellerLorries.filter((l: Lorry) => l.id !== id))
-    } else {
-      setBuyerLorries(buyerLorries.filter((l: Lorry) => l.id !== id))
+  const deleteLorry = async (id: number | string, mode: 'seller' | 'buyer' = 'seller') => {
+    try {
+      // Delete from backend
+      await apiClient.delete(`/lorries/${id}`)
+      
+      // Update local state
+      if (mode === 'seller') {
+        setSellerLorries(sellerLorries.filter((l: Lorry) => l.id !== id))
+      } else {
+        setBuyerLorries(buyerLorries.filter((l: Lorry) => l.id !== id))
+      }
+    } catch (error) {
+      console.error('Failed to delete lorry:', error)
+      alert('Failed to delete lorry. Please try again.')
     }
   }
 
