@@ -7,7 +7,6 @@ interface Seller {
   name: string
   address: string
   mobile: string
-  buyerName: string
 }
 
 interface Buyer {
@@ -15,7 +14,6 @@ interface Buyer {
   name: string
   address: string
   mobile: string
-  sellerName: string
 }
 
 interface LorryFormProps {

@@ -9,7 +9,8 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
   const navItems = [
     { id: 'seller', label: 'Seller' },
     { id: 'buyer', label: 'Buyer' },
-    { id: 'billing', label: 'Billing' }
+    { id: 'billing', label: 'Billing' },
+    { id: 'ledger', label: 'DailyLedger' }
   ]
 
   return (

@@ -3,22 +3,21 @@
 import React, { useState } from 'react'
 
 interface SellerFormProps {
-  onAddSeller: (seller: { name: string; address: string; mobile: string; buyerName: string }) => void
+  onAddSeller: (seller: { name: string; address: string; mobile: string }) => void
 }
 
 export default function SellerForm({ onAddSeller }: SellerFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
-    mobile: '',
-    buyerName: ''
+    mobile: ''
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (formData.name && formData.address && formData.mobile) {
       onAddSeller(formData)
-      setFormData({ name: '', address: '', mobile: '', buyerName: '' })
+      setFormData({ name: '', address: '', mobile: '' })
     }
   }
 
@@ -79,21 +78,6 @@ export default function SellerForm({ onAddSeller }: SellerFormProps) {
               placeholder="Enter 10-digit mobile number" 
               type="tel"
               pattern="[0-9]{10}"
-              required
-            />
-          </label>
-
-          <label className="flex flex-col w-full">
-            <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
-              Buyer Name
-            </p>
-            <input 
-              name="buyerName"
-              value={formData.buyerName}
-              onChange={handleChange}
-              className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 placeholder:text-gray-500 dark:placeholder-gray-400 p-3 text-base font-normal leading-normal" 
-              placeholder="Enter buyer's name" 
-              type="text"
               required
             />
           </label>

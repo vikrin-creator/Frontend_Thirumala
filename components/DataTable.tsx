@@ -7,7 +7,6 @@ interface Seller {
   name: string
   address: string
   mobile: string
-  buyerName: string
 }
 
 interface Lorry {
@@ -32,7 +31,6 @@ interface Buyer {
   name: string
   address: string
   mobile: string
-  sellerName: string
 }
 
 interface DataTableProps {
@@ -98,9 +96,6 @@ export default function DataTable({
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Name</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Address</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Mobile Number</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
-                    {mode === 'seller' ? 'Buyer Name' : 'Seller Name'}
-                  </th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300 text-right">Actions</th>
                 </tr>
               </thead>
@@ -111,7 +106,6 @@ export default function DataTable({
                       <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{seller.name}</td>
                       <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{seller.address}</td>
                       <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{seller.mobile}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{seller.buyerName}</td>
                       <td className="p-3">
                         <div className="flex justify-end gap-2">
                           <button className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
@@ -133,7 +127,6 @@ export default function DataTable({
                       <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{buyer.name}</td>
                       <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{buyer.address}</td>
                       <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{buyer.mobile}</td>
-                      <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{buyer.sellerName}</td>
                       <td className="p-3">
                         <div className="flex justify-end gap-2">
                           <button className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">

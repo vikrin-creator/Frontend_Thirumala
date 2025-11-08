@@ -7,7 +7,6 @@ interface Seller {
   name: string
   address: string
   mobile: string
-  buyerName: string
 }
 
 interface Buyer {
@@ -15,7 +14,6 @@ interface Buyer {
   name: string
   address: string
   mobile: string
-  sellerName: string
 }
 
 interface Lorry {
@@ -103,9 +101,8 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
     const buyer = buyers.find(b => b.id.toString() === buyerId)
     if (!buyer) return
 
-    const buyerLorries = lorries.filter(lorry => 
-      sellers.find(s => s.id === lorry.sellerId)?.buyerName === buyer.name
-    )
+    // For buyer bills, we'll show all lorries (simplified logic since buyer-seller relation is removed)
+    const buyerLorries = lorries
     const totalAmountForBuyer = buyerLorries.reduce((sum, lorry) => sum + lorry.amount, 0)
     
     const newBill = {
@@ -386,8 +383,8 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
                       <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.bargainDate}</td>
                       <td className="p-3 text-sm text-gray-800 dark:text-gray-100">
                         {bill.partyType === 'seller' 
-                          ? sellers.find(s => s.id === lorry.sellerId)?.buyerName || '-'
-                          : buyers.find(b => b.name === sellers.find(s => s.id === lorry.sellerId)?.buyerName)?.sellerName || '-'
+                          ? bill.partyName
+                          : bill.partyName
                         }
                       </td>
                       <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billType || 'local'}</td>

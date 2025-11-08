@@ -3,22 +3,21 @@
 import React, { useState } from 'react'
 
 interface BuyerFormProps {
-  onAddBuyer: (buyer: { name: string; address: string; mobile: string; sellerName: string }) => void
+  onAddBuyer: (buyer: { name: string; address: string; mobile: string }) => void
 }
 
 export default function BuyerForm({ onAddBuyer }: BuyerFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
-    mobile: '',
-    sellerName: ''
+    mobile: ''
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (formData.name && formData.address && formData.mobile) {
       onAddBuyer(formData)
-      setFormData({ name: '', address: '', mobile: '', sellerName: '' })
+      setFormData({ name: '', address: '', mobile: '' })
     }
   }
 
@@ -79,21 +78,6 @@ export default function BuyerForm({ onAddBuyer }: BuyerFormProps) {
               placeholder="Enter 10-digit mobile number" 
               type="tel"
               pattern="[0-9]{10}"
-              required
-            />
-          </label>
-
-          <label className="flex flex-col w-full">
-            <p className="text-gray-800 dark:text-gray-200 text-base font-medium leading-normal pb-2">
-              Seller Name
-            </p>
-            <input 
-              name="sellerName"
-              value={formData.sellerName}
-              onChange={handleChange}
-              className="soft-input" 
-              placeholder="Enter seller's name" 
-              type="text"
               required
             />
           </label>

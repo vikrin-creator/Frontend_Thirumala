@@ -7,13 +7,13 @@ import BuyerForm from '../components/BuyerForm'
 import LorryForm from '../components/LorryForm'
 import DataTable from '../components/DataTable'
 import BillingPage from '../components/BillingPage'
+import DailyLedgerPage from '../components/DailyLedgerPage'
 
 interface Seller {
   id: number
   name: string
   address: string
   mobile: string
-  buyerName: string
 }
 
 interface Buyer {
@@ -21,7 +21,6 @@ interface Buyer {
   name: string
   address: string
   mobile: string
-  sellerName: string
 }
 
 interface Lorry {
@@ -49,15 +48,13 @@ export default function Home() {
       id: 1,
       name: 'John Doe',
       address: '123 Main St, Anytown, USA',
-      mobile: '987-654-3210',
-      buyerName: 'ABC Industries'
+      mobile: '987-654-3210'
     },
     {
       id: 2,
       name: 'Jane Smith',
       address: '456 Oak Ave, Sometown, USA',
-      mobile: '123-456-7890',
-      buyerName: 'XYZ Corp'
+      mobile: '123-456-7890'
     }
   ])
 
@@ -66,15 +63,13 @@ export default function Home() {
       id: 1,
       name: 'ABC Industries',
       address: '789 Industrial Park, Business City, USA',
-      mobile: '555-123-4567',
-      sellerName: 'John Doe'
+      mobile: '555-123-4567'
     },
     {
       id: 2,
       name: 'XYZ Corp',
       address: '321 Corporate Blvd, Metro City, USA',
-      mobile: '555-987-6543',
-      sellerName: 'Jane Smith'
+      mobile: '555-987-6543'
     }
   ])
 
@@ -142,6 +137,7 @@ export default function Home() {
                   {activePage === 'seller' && 'Seller Management'}
                   {activePage === 'buyer' && 'Buyer Management'}
                   {activePage === 'billing' && 'Billing Management'}
+                  {activePage === 'ledger' && 'Daily Ledger'}
                 </h1>
               </div>
 
@@ -182,6 +178,13 @@ export default function Home() {
                   sellers={sellers}
                   buyers={buyers}
                   lorries={lorries}
+                />
+              )}
+
+              {activePage === 'ledger' && (
+                <DailyLedgerPage 
+                  sellers={sellers}
+                  buyers={buyers}
                 />
               )}
             </main>
