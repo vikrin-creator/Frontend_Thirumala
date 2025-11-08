@@ -63,43 +63,34 @@ export default function DataTable({
       </h2>
       
       <div className="flex flex-col gap-6">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <div className="flex gap-4">
-            <button 
-              onClick={() => setActiveTab(mode === 'seller' ? 'sellers' : 'buyers')}
-              className={`px-4 py-3 text-base font-semibold ${
-                activeTab === (mode === 'seller' ? 'sellers' : 'buyers') 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }`}
-            >
-              {mode === 'seller' ? 'View Seller Details' : 'View Buyer Details'}
-            </button>
-            <button 
-              onClick={() => setActiveTab('lorries')}
-              className={`px-4 py-3 text-base font-semibold ${
-                activeTab === 'lorries' 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }`}
-            >
-              View Lorry Details
-            </button>
-          </div>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setActiveTab(activeTab === (mode === 'seller' ? 'sellers' : 'buyers') ? '' : (mode === 'seller' ? 'sellers' : 'buyers'))}
+            className="px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/25 hover:from-purple-600 hover:to-purple-700 active:scale-95"
+          >
+            {mode === 'seller' ? 'View Seller Details' : 'View Buyer Details'}
+          </button>
+          <button 
+            onClick={() => setActiveTab(activeTab === 'lorries' ? '' : 'lorries')}
+            className="px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:from-blue-600 hover:to-blue-700 active:scale-95"
+          >
+            View Lorry Details
+          </button>
         </div>
 
-        <div className="overflow-x-auto">
-          {(activeTab === 'sellers' || activeTab === 'buyers') ? (
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-gray-50 dark:bg-gray-800/50">
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Name</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Address</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Mobile Number</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+        {activeTab && (
+          <div className="overflow-x-auto">
+            {(activeTab === 'sellers' || activeTab === 'buyers') ? (
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-gray-800/50">
+                    <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Name</th>
+                    <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Address</th>
+                    <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Mobile Number</th>
+                    <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {mode === 'seller' ? (
                   sellers.map((seller) => (
                     <tr key={seller.id}>
@@ -145,7 +136,7 @@ export default function DataTable({
                 )}
               </tbody>
             </table>
-          ) : (
+          ) : activeTab === 'lorries' ? (
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/50">
@@ -190,8 +181,9 @@ export default function DataTable({
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
+          ) : null}
+          </div>
+        )}
       </div>
     </div>
   )

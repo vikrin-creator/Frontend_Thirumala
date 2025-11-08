@@ -5,9 +5,10 @@ import { apiClient } from '../lib/api'
 
 interface SellerFormProps {
   onAddSeller: (seller: { id?: number; name: string; address: string; mobile: string }) => void
+  onViewDetails?: () => void
 }
 
-export default function SellerForm({ onAddSeller }: SellerFormProps) {
+export default function SellerForm({ onAddSeller, onViewDetails }: SellerFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -107,7 +108,16 @@ export default function SellerForm({ onAddSeller }: SellerFormProps) {
           </div>
         )}
         
-        <div className="flex justify-end pt-6">
+        <div className="flex justify-end gap-4 pt-6">
+          {onViewDetails && (
+            <button 
+              type="button"
+              onClick={onViewDetails}
+              className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
+            >
+              View Seller Details
+            </button>
+          )}
           <button 
             type="submit"
             disabled={loading}
