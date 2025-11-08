@@ -1,9 +1,10 @@
 'use client'
 
 import React, { useState } from 'react'
+import { apiClient } from '../lib/api'
 
 interface SellerFormProps {
-  onAddSeller: (seller: { name: string; address: string; mobile: string }) => void
+  onAddSeller: (seller: { id?: number; name: string; address: string; mobile: string }) => void
 }
 
 export default function SellerForm({ onAddSeller }: SellerFormProps) {
@@ -12,12 +13,29 @@ export default function SellerForm({ onAddSeller }: SellerFormProps) {
     address: '',
     mobile: ''
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (formData.name && formData.address && formData.mobile) {
-      onAddSeller(formData)
-      setFormData({ name: '', address: '', mobile: '' })
+      setLoading(true)
+      setError(null)
+      
+      try {
+        // Send data to backend API
+        const response = await apiClient.post('/sellers', formData)
+        
+        // Call the parent callback with the response data
+        onAddSeller(response.data || { ...formData, id: Date.now() })
+        
+        // Reset form
+        setFormData({ name: '', address: '', mobile: '' })
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to add seller')
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -83,12 +101,19 @@ export default function SellerForm({ onAddSeller }: SellerFormProps) {
           </label>
         </div>
         
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+            <strong>Error:</strong> {error}
+          </div>
+        )}
+        
         <div className="flex justify-end pt-6">
           <button 
             type="submit"
-            className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95"
+            disabled={loading}
+            className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Seller
+            {loading ? 'Saving...' : 'Save Seller'}
           </button>
         </div>
       </form>
