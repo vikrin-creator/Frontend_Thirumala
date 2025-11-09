@@ -25,14 +25,15 @@ export default function SellerForm({ onAddSeller, onViewDetails }: SellerFormPro
       
       try {
         // Send data to backend API with 'contact' field instead of 'mobile'
+        // Convert name to uppercase for consistency
         const response = await apiClient.post('/sellers', {
-          name: formData.name,
+          name: formData.name.toUpperCase(),
           address: formData.address,
           contact: formData.mobile
         })
         
         // Call the parent callback with the response data
-        onAddSeller(response.data || { ...formData, id: Date.now() })
+        onAddSeller(response.data || { ...formData, name: formData.name.toUpperCase(), id: Date.now() })
         
         // Reset form
         setFormData({ name: '', address: '', mobile: '' })

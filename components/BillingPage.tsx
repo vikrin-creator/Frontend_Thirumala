@@ -81,7 +81,11 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
     const seller = sellers.find(s => s.id.toString() === sellerId)
     if (!seller) return
 
-    const sellerLorries = lorries.filter(lorry => lorry.sellerId.toString() === sellerId)
+    // Filter lorries by seller name (matches both seller mode and buyer mode lorries)
+    const sellerLorries = lorries.filter(lorry => 
+      lorry.sellerName.toLowerCase() === seller.name.toLowerCase()
+    )
+    
     const totalCommissionForSeller = sellerLorries.reduce((sum, lorry) => sum + lorry.totalCommission, 0)
     
     const newBill = {

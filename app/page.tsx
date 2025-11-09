@@ -403,8 +403,9 @@ export default function Home() {
   const updateSeller = async (id: number | string, updatedData: Partial<Seller>) => {
     try {
       // Prepare data for backend (map mobile to contact)
+      // Convert name to uppercase for consistency
       const backendData = {
-        name: updatedData.name,
+        name: updatedData.name ? updatedData.name.toUpperCase() : undefined,
         address: updatedData.address,
         contact: updatedData.mobile,
         city: updatedData.city,
@@ -433,8 +434,9 @@ export default function Home() {
   const updateBuyer = async (id: number | string, updatedData: Partial<Buyer>) => {
     try {
       // Prepare data for backend (map mobile to contact)
+      // Convert name to uppercase for consistency
       const backendData = {
-        name: updatedData.name,
+        name: updatedData.name ? updatedData.name.toUpperCase() : undefined,
         address: updatedData.address,
         contact: updatedData.mobile,
         city: updatedData.city,

@@ -57,7 +57,12 @@ export default function DailyLedgerPage({
     e.preventDefault()
     
     if (formData.sellerName && formData.buyerName && formData.conditionFromDate && formData.conditionToDate) {
-      onAddLedger(formData)
+      // Convert names to uppercase for consistency
+      onAddLedger({
+        ...formData,
+        sellerName: formData.sellerName.toUpperCase(),
+        buyerName: formData.buyerName.toUpperCase()
+      })
       
       // Reset form
       setFormData({
@@ -89,7 +94,13 @@ export default function DailyLedgerPage({
   }
 
   const handleSaveEdit = (id: number | string) => {
-    onEditLedger(id, editFormData)
+    // Convert names to uppercase for consistency
+    const updatedData = {
+      ...editFormData,
+      ...(editFormData.sellerName && { sellerName: editFormData.sellerName.toUpperCase() }),
+      ...(editFormData.buyerName && { buyerName: editFormData.buyerName.toUpperCase() })
+    }
+    onEditLedger(id, updatedData)
     setEditingId(null)
     setEditFormData({})
   }

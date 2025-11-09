@@ -80,6 +80,7 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
       onAddLorry({
         ...formData,
         sellerId: selectedSeller,
+        counterpartyName: formData.counterpartyName.toUpperCase(), // Convert to uppercase
         totalCommission
       })
       setFormData({
