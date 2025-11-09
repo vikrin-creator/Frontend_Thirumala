@@ -121,193 +121,138 @@ export default function DailyLedgerPage({
     const htmlContent = `
       <!DOCTYPE html>
       <html>
-        <head>
-          <title>Pending Lorry Report - ${dateStr}</title>
-          <style>
-            @page { 
-              size: A4; 
-              margin: 15mm; 
-            }
+      <head>
+        <title>Pending Lorry Report - ${dateStr}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #fff;
+            color: #000;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+          }
+          .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          .header p {
+            font-size: 12px;
+            color: #555;
+          }
+          .meta-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 12px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          th {
+            background: #333;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: bold;
+            border: 1px solid #000;
+          }
+          td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 12px;
+          }
+          tr:nth-child(even) {
+            background: #f9f9f9;
+          }
+          .status-no {
+            color: #dc3545;
+            font-weight: bold;
+          }
+          .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+          }
+          @media print {
             body {
-              font-family: Arial, sans-serif;
-              line-height: 1.6;
-              color: #333;
-              max-width: 100%;
-              margin: 0;
-              padding: 20px;
-            }
-            .header {
-              text-align: center;
-              border-bottom: 3px solid #333;
-              padding-bottom: 15px;
-              margin-bottom: 25px;
-            }
-            .header h1 {
-              margin: 0 0 5px 0;
-              font-size: 24px;
-              color: #000;
-            }
-            .header h2 {
-              margin: 5px 0;
-              font-size: 18px;
-              color: #666;
-              font-weight: normal;
-            }
-            .meta-info {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 25px;
               padding: 10px;
-              background-color: #f5f5f5;
-              border-radius: 5px;
             }
-            .meta-info div {
-              font-size: 14px;
+            table {
+              page-break-inside: auto;
             }
-            .meta-info strong {
-              color: #000;
-            }
-            .entry {
-              border: 2px solid #ddd;
-              border-radius: 8px;
-              padding: 15px;
-              margin-bottom: 20px;
+            tr {
               page-break-inside: avoid;
-              background-color: #fff;
+              page-break-after: auto;
             }
-            .entry-header {
-              background-color: #f44336;
-              color: white;
-              padding: 10px 15px;
-              margin: -15px -15px 15px -15px;
-              border-radius: 6px 6px 0 0;
-              font-weight: bold;
-              font-size: 16px;
-            }
-            .entry-content {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 12px;
-            }
-            .entry-field {
-              display: flex;
-              padding: 8px 0;
-            }
-            .entry-field label {
-              font-weight: bold;
-              min-width: 140px;
-              color: #555;
-            }
-            .entry-field value {
-              color: #000;
-              flex: 1;
-            }
-            .status-badge {
-              display: inline-block;
-              padding: 4px 12px;
-              background-color: #f44336;
-              color: white;
-              border-radius: 12px;
-              font-size: 12px;
-              font-weight: bold;
-            }
-            .footer {
-              margin-top: 30px;
-              padding-top: 15px;
-              border-top: 2px solid #ddd;
-              text-align: center;
-              font-size: 12px;
-              color: #666;
-            }
-            .summary {
-              background-color: #fff3cd;
-              border: 2px solid #ffc107;
-              border-radius: 8px;
-              padding: 15px;
-              margin-bottom: 25px;
-              text-align: center;
-            }
-            .summary h3 {
-              margin: 0 0 10px 0;
-              color: #856404;
-              font-size: 18px;
-            }
-            .summary p {
-              margin: 5px 0;
-              font-size: 16px;
-              color: #856404;
-            }
-            @media print {
-              body { padding: 0; }
-              .entry { page-break-inside: avoid; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>═══════════════════════════════════════</h1>
-            <h1>PENDING LORRY REPORT</h1>
-            <h2>Thirumala Broker System</h2>
-            <h1>═══════════════════════════════════════</h1>
-          </div>
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>PENDING LORRY REPORT</h1>
+          <p>Thirumala Broker System</p>
+        </div>
 
-          <div class="meta-info">
-            <div><strong>Generated On:</strong> ${dateStr} at ${timeStr}</div>
-            <div><strong>Total Pending:</strong> ${pendingEntries.length} ${pendingEntries.length === 1 ? 'Entry' : 'Entries'}</div>
-          </div>
+        <div class="meta-info">
+          <div>Generated On: <strong>${dateStr} at ${timeStr}</strong></div>
+          <div>Total Pending: <strong>${pendingEntries.length} ${pendingEntries.length === 1 ? 'Entry' : 'Entries'}</strong></div>
+        </div>
 
-          <div class="summary">
-            <h3>⚠️ ATTENTION REQUIRED</h3>
-            <p><strong>${pendingEntries.length}</strong> lorry ${pendingEntries.length === 1 ? 'entry' : 'entries'} pending (NOT LOADED)</p>
-          </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 8%;">S.No</th>
+              <th style="width: 22%;">Seller Name</th>
+              <th style="width: 22%;">Buyer Name</th>
+              <th style="width: 16%;">Condition From</th>
+              <th style="width: 16%;">Condition To</th>
+              <th style="width: 16%;">Loaded Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pendingEntries.map((entry, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${entry.sellerName}</td>
+                <td>${entry.buyerName}</td>
+                <td>${new Date(entry.conditionFromDate).toLocaleDateString('en-IN')}</td>
+                <td>${new Date(entry.conditionToDate).toLocaleDateString('en-IN')}</td>
+                <td class="status-no">NOT LOADED</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
 
-          ${pendingEntries.map((entry, index) => `
-            <div class="entry">
-              <div class="entry-header">
-                Entry #${index + 1}
-              </div>
-              <div class="entry-content">
-                <div class="entry-field">
-                  <label>🏢 Seller Name:</label>
-                  <value>${entry.sellerName}</value>
-                </div>
-                <div class="entry-field">
-                  <label>👤 Buyer Name:</label>
-                  <value>${entry.buyerName}</value>
-                </div>
-                <div class="entry-field">
-                  <label>📅 Condition From:</label>
-                  <value>${entry.conditionFromDate}</value>
-                </div>
-                <div class="entry-field">
-                  <label>📅 Condition To:</label>
-                  <value>${entry.conditionToDate}</value>
-                </div>
-                <div class="entry-field">
-                  <label>📦 Loaded Status:</label>
-                  <value><span class="status-badge">❌ NOT LOADED</span></value>
-                </div>
-              </div>
-            </div>
-          `).join('')}
-
-          <div class="footer">
-            <p>═══════════════════════════════════════</p>
-            <p><strong>Thirumala Broker System</strong></p>
-            <p>This is a system-generated report | Please take necessary action</p>
-          </div>
-
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
+        <div class="footer">
+          <p>Thirumala Broker System - This is a system-generated report</p>
+        </div>
+      </body>
       </html>
     `
 
     printWindow.document.write(htmlContent)
     printWindow.document.close()
+    printWindow.focus()
+    setTimeout(() => {
+      printWindow.print()
+    }, 250)
   }
 
   return (
