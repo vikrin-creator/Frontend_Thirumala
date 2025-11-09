@@ -258,8 +258,8 @@ export default function DailyLedgerPage({
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Daily Ledger Form */}
-      <div className="flex flex-col gap-6 p-8 rounded-2xl form-container soft-shadow-lg">
-        <h2 className="text-gray-900 dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-0 pb-2">
+      <div className="flex flex-col gap-4 sm:gap-6 p-4 sm:p-6 lg:p-8 rounded-2xl form-container soft-shadow-lg">
+        <h2 className="text-gray-900 dark:text-gray-100 text-lg sm:text-xl lg:text-[22px] font-bold leading-tight tracking-[-0.015em] px-0 pb-2">
           Add Daily Ledger Entry
         </h2>
         
@@ -355,10 +355,10 @@ export default function DailyLedgerPage({
             </label>
           </div>
           
-          <div className="flex justify-end gap-3 pt-6">
+          <div className="flex flex-col sm:flex-row justify-center sm:justify-end gap-3 pt-6">
             <button 
               type="submit"
-              className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95"
+              className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white text-sm sm:text-base font-bold leading-normal transition-all duration-300 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95 w-full sm:w-auto"
             >
               Add Ledger Entry
             </button>
@@ -367,14 +367,14 @@ export default function DailyLedgerPage({
                 <button 
                   type="button"
                   onClick={() => setShowDetails(!showDetails)}
-                  className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
+                  className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm sm:text-base font-bold leading-normal transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 w-full sm:w-auto"
                 >
                   {showDetails ? 'Hide Details' : 'View All Ledgers'}
                 </button>
                 <button 
                   type="button"
                   onClick={handleDownloadLedger}
-                  className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg hover:shadow-green-500/25 active:scale-95"
+                  className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white text-sm sm:text-base font-bold leading-normal transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg hover:shadow-green-500/25 active:scale-95 w-full sm:w-auto"
                 >
                   Download Ledger
                 </button>
@@ -388,35 +388,35 @@ export default function DailyLedgerPage({
       {showDetails && ledgerEntries.length > 0 && (
         <div className="flex flex-col gap-4 p-6 rounded-2xl form-container soft-shadow-lg">
           <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3">
-            <h3 className="text-gray-900 dark:text-gray-100 text-xl font-bold leading-tight">
+            <h3 className="text-gray-900 dark:text-gray-100 text-base sm:text-lg lg:text-xl font-bold leading-tight">
               All Daily Ledger Entries
             </h3>
           </div>
 
           {/* Table View */}
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full border-collapse min-w-[640px]">
               <thead>
                 <tr className="border-b-2 border-gray-300 dark:border-gray-600">
-                  <th className="text-left p-3 text-gray-900 dark:text-gray-100 font-semibold text-sm">Seller</th>
-                  <th className="text-left p-3 text-gray-900 dark:text-gray-100 font-semibold text-sm">Buyer</th>
-                  <th className="text-left p-3 text-gray-900 dark:text-gray-100 font-semibold text-sm">Loaded</th>
-                  <th className="text-left p-3 text-gray-900 dark:text-gray-100 font-semibold text-sm">Condition From</th>
-                  <th className="text-left p-3 text-gray-900 dark:text-gray-100 font-semibold text-sm">Condition To</th>
-                  <th className="text-center p-3 text-gray-900 dark:text-gray-100 font-semibold text-sm">Actions</th>
+                  <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Seller</th>
+                  <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Buyer</th>
+                  <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Loaded</th>
+                  <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Condition From</th>
+                  <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Condition To</th>
+                  <th className="text-center p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {ledgerEntries.map((entry) => (
                   <tr key={entry.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="p-3 text-gray-800 dark:text-gray-200 text-sm font-medium">
+                    <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm font-medium">
                       {entry.sellerName}
                     </td>
-                    <td className="p-3 text-gray-800 dark:text-gray-200 text-sm font-medium">
+                    <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm font-medium">
                       {entry.buyerName}
                     </td>
-                    <td className="p-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    <td className="p-2 sm:p-3">
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                         entry.loaded === 'Yes' 
                           ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
                           : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
@@ -424,23 +424,23 @@ export default function DailyLedgerPage({
                         {entry.loaded}
                       </span>
                     </td>
-                    <td className="p-3 text-gray-800 dark:text-gray-200 text-sm">
+                    <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm whitespace-nowrap">
                       {entry.conditionFromDate}
                     </td>
-                    <td className="p-3 text-gray-800 dark:text-gray-200 text-sm">
+                    <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm whitespace-nowrap">
                       {entry.conditionToDate}
                     </td>
                     <td className="p-3 text-center">
-                      <div className="flex justify-center gap-2">
+                      <div className="flex flex-col sm:flex-row justify-center gap-2">
                         <button
                           onClick={() => handleEditClick(entry)}
-                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium transition-colors"
+                          className="px-3 py-1.5 sm:py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(entry.id)}
-                          className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm font-medium transition-colors"
+                          className="px-3 py-1.5 sm:py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
                         >
                           Delete
                         </button>
