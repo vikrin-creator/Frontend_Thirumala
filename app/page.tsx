@@ -59,6 +59,7 @@ interface LedgerEntry {
 export default function Home() {
   const [activePage, setActivePage] = useState('seller')
   const [activeTab, setActiveTab] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
   
   const scrollToDetails = () => {
     const detailsSection = document.getElementById('details-section')
@@ -183,10 +184,18 @@ export default function Home() {
       }
     }
 
-    fetchSellers()
-    fetchBuyers()
-    fetchLedger()
-    fetchLorries()
+    const loadAllData = async () => {
+      setIsLoading(true)
+      await Promise.all([
+        fetchSellers(),
+        fetchBuyers(),
+        fetchLedger(),
+        fetchLorries()
+      ])
+      setIsLoading(false)
+    }
+
+    loadAllData()
   }, [])
 
   // Separate lorry lists for seller and buyer modes
@@ -553,6 +562,15 @@ export default function Home() {
 
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+      {/* Loading Spinner Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          </div>
+        </div>
+      )}
+      
       <div className="layout-container flex h-full grow flex-col glass-overlay backdrop-blur-sm">
         <div className="px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 flex flex-1 justify-center py-3 sm:py-4 lg:py-5">
           <div className="layout-content-container flex flex-col w-full max-w-7xl flex-1">

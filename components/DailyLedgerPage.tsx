@@ -103,6 +103,213 @@ export default function DailyLedgerPage({
     onDeleteLedger(id)
   }
 
+  const handleDownloadLedger = () => {
+    const pendingEntries = ledgerEntries.filter(entry => entry.loaded === 'No')
+    
+    if (pendingEntries.length === 0) {
+      alert('No pending (unloaded) entries to download!')
+      return
+    }
+
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('en-IN')
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Pending Lorry Report - ${dateStr}</title>
+          <style>
+            @page { 
+              size: A4; 
+              margin: 15mm; 
+            }
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 100%;
+              margin: 0;
+              padding: 20px;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 3px solid #333;
+              padding-bottom: 15px;
+              margin-bottom: 25px;
+            }
+            .header h1 {
+              margin: 0 0 5px 0;
+              font-size: 24px;
+              color: #000;
+            }
+            .header h2 {
+              margin: 5px 0;
+              font-size: 18px;
+              color: #666;
+              font-weight: normal;
+            }
+            .meta-info {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 25px;
+              padding: 10px;
+              background-color: #f5f5f5;
+              border-radius: 5px;
+            }
+            .meta-info div {
+              font-size: 14px;
+            }
+            .meta-info strong {
+              color: #000;
+            }
+            .entry {
+              border: 2px solid #ddd;
+              border-radius: 8px;
+              padding: 15px;
+              margin-bottom: 20px;
+              page-break-inside: avoid;
+              background-color: #fff;
+            }
+            .entry-header {
+              background-color: #f44336;
+              color: white;
+              padding: 10px 15px;
+              margin: -15px -15px 15px -15px;
+              border-radius: 6px 6px 0 0;
+              font-weight: bold;
+              font-size: 16px;
+            }
+            .entry-content {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 12px;
+            }
+            .entry-field {
+              display: flex;
+              padding: 8px 0;
+            }
+            .entry-field label {
+              font-weight: bold;
+              min-width: 140px;
+              color: #555;
+            }
+            .entry-field value {
+              color: #000;
+              flex: 1;
+            }
+            .status-badge {
+              display: inline-block;
+              padding: 4px 12px;
+              background-color: #f44336;
+              color: white;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: bold;
+            }
+            .footer {
+              margin-top: 30px;
+              padding-top: 15px;
+              border-top: 2px solid #ddd;
+              text-align: center;
+              font-size: 12px;
+              color: #666;
+            }
+            .summary {
+              background-color: #fff3cd;
+              border: 2px solid #ffc107;
+              border-radius: 8px;
+              padding: 15px;
+              margin-bottom: 25px;
+              text-align: center;
+            }
+            .summary h3 {
+              margin: 0 0 10px 0;
+              color: #856404;
+              font-size: 18px;
+            }
+            .summary p {
+              margin: 5px 0;
+              font-size: 16px;
+              color: #856404;
+            }
+            @media print {
+              body { padding: 0; }
+              .entry { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>═══════════════════════════════════════</h1>
+            <h1>PENDING LORRY REPORT</h1>
+            <h2>Thirumala Broker System</h2>
+            <h1>═══════════════════════════════════════</h1>
+          </div>
+
+          <div class="meta-info">
+            <div><strong>Generated On:</strong> ${dateStr} at ${timeStr}</div>
+            <div><strong>Total Pending:</strong> ${pendingEntries.length} ${pendingEntries.length === 1 ? 'Entry' : 'Entries'}</div>
+          </div>
+
+          <div class="summary">
+            <h3>⚠️ ATTENTION REQUIRED</h3>
+            <p><strong>${pendingEntries.length}</strong> lorry ${pendingEntries.length === 1 ? 'entry' : 'entries'} pending (NOT LOADED)</p>
+          </div>
+
+          ${pendingEntries.map((entry, index) => `
+            <div class="entry">
+              <div class="entry-header">
+                Entry #${index + 1}
+              </div>
+              <div class="entry-content">
+                <div class="entry-field">
+                  <label>🏢 Seller Name:</label>
+                  <value>${entry.sellerName}</value>
+                </div>
+                <div class="entry-field">
+                  <label>👤 Buyer Name:</label>
+                  <value>${entry.buyerName}</value>
+                </div>
+                <div class="entry-field">
+                  <label>📅 Condition From:</label>
+                  <value>${entry.conditionFromDate}</value>
+                </div>
+                <div class="entry-field">
+                  <label>📅 Condition To:</label>
+                  <value>${entry.conditionToDate}</value>
+                </div>
+                <div class="entry-field">
+                  <label>📦 Loaded Status:</label>
+                  <value><span class="status-badge">❌ NOT LOADED</span></value>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+
+          <div class="footer">
+            <p>═══════════════════════════════════════</p>
+            <p><strong>Thirumala Broker System</strong></p>
+            <p>This is a system-generated report | Please take necessary action</p>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `
+
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Daily Ledger Form */}
@@ -211,13 +418,22 @@ export default function DailyLedgerPage({
               Add Ledger Entry
             </button>
             {ledgerEntries.length > 0 && (
-              <button 
-                type="button"
-                onClick={() => setShowDetails(!showDetails)}
-                className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
-              >
-                {showDetails ? 'Hide Details' : 'View All Ledgers'}
-              </button>
+              <>
+                <button 
+                  type="button"
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
+                >
+                  {showDetails ? 'Hide Details' : 'View All Ledgers'}
+                </button>
+                <button 
+                  type="button"
+                  onClick={handleDownloadLedger}
+                  className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg hover:shadow-green-500/25 active:scale-95"
+                >
+                  Download Ledger
+                </button>
+              </>
             )}
           </div>
         </form>
