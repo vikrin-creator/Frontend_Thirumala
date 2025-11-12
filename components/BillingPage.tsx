@@ -107,8 +107,10 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
     const buyer = buyers.find(b => b.id.toString() === buyerId)
     if (!buyer) return
 
-    // For buyer bills, we'll show all lorries (simplified logic since buyer-seller relation is removed)
-    const buyerLorries = lorries
+    // Filter lorries by buyer name (only buyer mode lorries where this buyer purchased)
+    const buyerLorries = lorries.filter(lorry => 
+      lorry.counterpartyName && lorry.counterpartyName.toLowerCase() === buyer.name.toLowerCase()
+    )
     const totalAmountForBuyer = buyerLorries.reduce((sum, lorry) => sum + lorry.amount, 0)
     
     const newBill = {

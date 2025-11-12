@@ -25,9 +25,8 @@ export default function BuyerForm({ onAddBuyer, onViewDetails }: BuyerFormProps)
       
       try {
         // Send data to backend API with 'contact' field instead of 'mobile'
-        // Convert name to uppercase for consistency
         const response = await apiClient.post('/buyers', {
-          name: formData.name.toUpperCase(),
+          name: formData.name,
           address: formData.address,
           contact: formData.mobile
         })

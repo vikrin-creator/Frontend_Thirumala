@@ -80,7 +80,7 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
       onAddLorry({
         ...formData,
         sellerId: selectedSeller,
-        counterpartyName: formData.counterpartyName.toUpperCase(), // Convert to uppercase
+        counterpartyName: formData.counterpartyName,
         totalCommission
       })
       setFormData({
@@ -212,17 +212,31 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
               <p className="text-gray-800 dark:text-gray-200 text-base font-medium leading-normal pb-2">
                 {mode === 'seller' ? 'Buyer Name' : 'Seller Name'}
               </p>
-              <input 
+              <select 
                 id="counterpartyName"
                 name="counterpartyName"
                 value={formData.counterpartyName}
-                onChange={handleChange}
-                className="soft-input" 
-                placeholder={mode === 'seller' ? 'Enter buyer name' : 'Enter seller name'} 
-                type="text"
-                autoComplete="name"
+                onChange={handleSelectChange}
+                className="soft-select" 
+                autoComplete="off"
                 required
-              />
+              >
+                <option value="">
+                  {mode === 'seller' ? 'Select Buyer' : 'Select Seller'}
+                </option>
+                {mode === 'seller' 
+                  ? buyers.map((buyer) => (
+                      <option key={buyer.id} value={buyer.name}>
+                        {buyer.name}
+                      </option>
+                    ))
+                  : sellers.map((seller) => (
+                      <option key={seller.id} value={seller.name}>
+                        {seller.name}
+                      </option>
+                    ))
+                }
+              </select>
             </label>
 
             <label className="flex flex-col">
