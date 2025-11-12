@@ -52,8 +52,10 @@ interface LedgerEntry {
   sellerName: string
   buyerName: string
   loaded: 'Yes' | 'No'
+  importLocal?: string
   conditionFromDate: string
   conditionToDate: string
+  mode?: 'seller' | 'buyer'  // Add mode field
 }
 
 export default function Home() {
@@ -82,7 +84,8 @@ export default function Home() {
 
   const [buyers, setBuyers] = useState<Buyer[]>([])
 
-  const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([])
+  const [sellerLedgerEntries, setSellerLedgerEntries] = useState<LedgerEntry[]>([])
+  const [buyerLedgerEntries, setBuyerLedgerEntries] = useState<LedgerEntry[]>([])
 
   // Fetch sellers from backend on mount
   useEffect(() => {
@@ -124,17 +127,36 @@ export default function Home() {
 
     const fetchLedger = async () => {
       try {
-        const response = await apiClient.get('/ledger')
-        if (response.success && response.data) {
-          const mappedLedger = response.data.map((entry: any) => ({
+        // Fetch seller ledger
+        const sellerResponse = await apiClient.get('/seller-ledger')
+        if (sellerResponse.success && sellerResponse.data) {
+          const sellerEntries = sellerResponse.data.map((entry: any) => ({
             id: entry._id || entry.id,
             sellerName: entry.sellerName,
             buyerName: entry.buyerName,
             loaded: entry.loaded,
+            importLocal: entry.importLocal,
             conditionFromDate: entry.conditionFromDate,
-            conditionToDate: entry.conditionToDate
+            conditionToDate: entry.conditionToDate,
+            mode: 'seller' as const
           }))
-          setLedgerEntries(mappedLedger)
+          setSellerLedgerEntries(sellerEntries)
+        }
+
+        // Fetch buyer ledger
+        const buyerResponse = await apiClient.get('/buyer-ledger')
+        if (buyerResponse.success && buyerResponse.data) {
+          const buyerEntries = buyerResponse.data.map((entry: any) => ({
+            id: entry._id || entry.id,
+            sellerName: entry.sellerName,
+            buyerName: entry.buyerName,
+            loaded: entry.loaded,
+            importLocal: entry.importLocal,
+            conditionFromDate: entry.conditionFromDate,
+            conditionToDate: entry.conditionToDate,
+            mode: 'buyer' as const
+          }))
+          setBuyerLedgerEntries(buyerEntries)
         }
       } catch (error) {
         console.error('Failed to fetch ledger entries:', error)
@@ -295,7 +317,7 @@ export default function Home() {
 
         // Auto-update ledger: set loaded = "Yes" for this seller-buyer combination
         console.log('🚀 Calling updateLedgerLoadedStatus with:', { sellerName, buyerName, mode })
-        await updateLedgerLoadedStatus(sellerName, buyerName)
+        await updateLedgerLoadedStatus(sellerName, buyerName, mode)
       }
     } catch (error) {
       console.error('Failed to add lorry:', error)
@@ -303,23 +325,29 @@ export default function Home() {
     }
   }
 
-  const updateLedgerLoadedStatus = async (sellerName: string, buyerName: string) => {
+  const updateLedgerLoadedStatus = async (sellerName: string, buyerName: string, mode: 'seller' | 'buyer') => {
     try {
-      console.log('🔍 Updating ledger for:', { sellerName, buyerName })
-      console.log('📋 Current ledger entries:', ledgerEntries.map(e => ({ seller: e.sellerName, buyer: e.buyerName, loaded: e.loaded })))
+      console.log('🔍 Updating ledger for:', { sellerName, buyerName, mode })
+      
+      // Get the appropriate ledger entries based on mode
+      const currentLedger = mode === 'seller' ? sellerLedgerEntries : buyerLedgerEntries
+      console.log(`📋 Current ${mode} ledger entries:`, currentLedger.map((e: LedgerEntry) => ({ seller: e.sellerName, buyer: e.buyerName, loaded: e.loaded })))
       
       // Find existing ledger entry for this seller-buyer combination (case-insensitive)
-      const existingEntry = ledgerEntries.find(
-        entry => entry.sellerName.toUpperCase() === sellerName.toUpperCase() && 
-                 entry.buyerName.toUpperCase() === buyerName.toUpperCase()
+      const existingEntry = currentLedger.find(
+        (entry: LedgerEntry) => entry.sellerName.toLowerCase() === sellerName.toLowerCase() && 
+                 entry.buyerName.toLowerCase() === buyerName.toLowerCase()
       )
 
       console.log('🎯 Found existing entry:', existingEntry ? `ID: ${existingEntry.id}, Loaded: ${existingEntry.loaded}` : 'No matching entry found')
 
+      // Use the correct endpoint based on mode
+      const endpoint = mode === 'buyer' ? '/buyer-ledger' : '/seller-ledger'
+
       if (existingEntry) {
         // Update existing entry to loaded = "Yes"
         console.log('✅ Updating existing entry to loaded="Yes"')
-        await apiClient.put(`/ledger/${existingEntry.id}`, {
+        await apiClient.put(`${endpoint}/${existingEntry.id}`, {
           sellerName: existingEntry.sellerName,
           buyerName: existingEntry.buyerName,
           loaded: 'Yes',
@@ -330,7 +358,7 @@ export default function Home() {
         // Create new entry with loaded = "Yes"
         console.log('➕ Creating new ledger entry with loaded="Yes"')
         const today = new Date().toISOString().split('T')[0]
-        await apiClient.post('/ledger', {
+        await apiClient.post(endpoint, {
           sellerName,
           buyerName,
           loaded: 'Yes',
@@ -341,19 +369,8 @@ export default function Home() {
 
       // Refresh ledger entries
       console.log('🔄 Refreshing ledger entries from backend')
-      const response = await apiClient.get('/ledger')
-      if (response.success && response.data) {
-        const mappedLedger = response.data.map((entry: any) => ({
-          id: entry._id || entry.id,
-          sellerName: entry.sellerName,
-          buyerName: entry.buyerName,
-          loaded: entry.loaded,
-          conditionFromDate: entry.conditionFromDate,
-          conditionToDate: entry.conditionToDate
-        }))
-        setLedgerEntries(mappedLedger)
-        console.log('✅ Ledger entries refreshed successfully:', mappedLedger.length, 'entries')
-      }
+      await refreshLedgerEntries()
+      console.log('✅ Ledger entries refreshed successfully')
     } catch (error) {
       console.error('❌ Failed to update ledger loaded status:', error)
     }
@@ -492,23 +509,50 @@ export default function Home() {
     }
   }
 
+  // Helper function to refresh ledger entries from backend
+  const refreshLedgerEntries = async () => {
+    try {
+      // Fetch seller ledger
+      const sellerResponse = await apiClient.get('/seller-ledger')
+      if (sellerResponse.success && sellerResponse.data) {
+        const sellerEntries = sellerResponse.data.map((entry: any) => ({
+          id: entry._id || entry.id,
+          sellerName: entry.sellerName,
+          buyerName: entry.buyerName,
+          loaded: entry.loaded,
+          importLocal: entry.importLocal,
+          conditionFromDate: entry.conditionFromDate,
+          conditionToDate: entry.conditionToDate,
+          mode: 'seller' as const
+        }))
+        setSellerLedgerEntries(sellerEntries)
+      }
+
+      // Fetch buyer ledger
+      const buyerResponse = await apiClient.get('/buyer-ledger')
+      if (buyerResponse.success && buyerResponse.data) {
+        const buyerEntries = buyerResponse.data.map((entry: any) => ({
+          id: entry._id || entry.id,
+          sellerName: entry.sellerName,
+          buyerName: entry.buyerName,
+          loaded: entry.loaded,
+          importLocal: entry.importLocal,
+          conditionFromDate: entry.conditionFromDate,
+          conditionToDate: entry.conditionToDate,
+          mode: 'buyer' as const
+        }))
+        setBuyerLedgerEntries(buyerEntries)
+      }
+    } catch (error) {
+      console.error('Failed to refresh ledger entries:', error)
+    }
+  }
+
   const addLedgerEntry = async (entry: Omit<LedgerEntry, 'id'>) => {
     try {
-      await apiClient.post('/ledger', entry)
-      
-      // Refresh ledger entries
-      const response = await apiClient.get('/ledger')
-      if (response.success && response.data) {
-        const mappedLedger = response.data.map((e: any) => ({
-          id: e._id || e.id,
-          sellerName: e.sellerName,
-          buyerName: e.buyerName,
-          loaded: e.loaded,
-          conditionFromDate: e.conditionFromDate,
-          conditionToDate: e.conditionToDate
-        }))
-        setLedgerEntries(mappedLedger)
-      }
+      const endpoint = entry.mode === 'buyer' ? '/buyer-ledger' : '/seller-ledger'
+      await apiClient.post(endpoint, entry)
+      await refreshLedgerEntries()
     } catch (error) {
       console.error('Failed to add ledger entry:', error)
       alert('Failed to add ledger entry. Please try again.')
@@ -521,51 +565,29 @@ export default function Home() {
         sellerName: updatedData.sellerName,
         buyerName: updatedData.buyerName,
         loaded: updatedData.loaded,
+        importLocal: updatedData.importLocal,
         conditionFromDate: updatedData.conditionFromDate,
         conditionToDate: updatedData.conditionToDate
       }
       
-      await apiClient.put(`/ledger/${id}`, backendData)
-      
-      // Refresh ledger entries
-      const response = await apiClient.get('/ledger')
-      if (response.success && response.data) {
-        const mappedLedger = response.data.map((e: any) => ({
-          id: e._id || e.id,
-          sellerName: e.sellerName,
-          buyerName: e.buyerName,
-          loaded: e.loaded,
-          conditionFromDate: e.conditionFromDate,
-          conditionToDate: e.conditionToDate
-        }))
-        setLedgerEntries(mappedLedger)
-      }
+      const endpoint = updatedData.mode === 'buyer' ? '/buyer-ledger' : '/seller-ledger'
+      await apiClient.put(`${endpoint}/${id}`, backendData)
+      await refreshLedgerEntries()
     } catch (error) {
       console.error('Failed to update ledger entry:', error)
       alert('Failed to update ledger entry. Please try again.')
     }
   }
 
-  const deleteLedgerEntry = async (id: number | string) => {
+  const deleteLedgerEntry = async (id: number | string, mode?: 'seller' | 'buyer') => {
     try {
-      const result = await apiClient.delete(`/ledger/${id}`)
+      const endpoint = mode === 'buyer' ? '/buyer-ledger' : '/seller-ledger'
+      const result = await apiClient.delete(`${endpoint}/${id}`)
       console.log('Delete result:', result)
       
       if (result.success) {
-        // Refresh ledger entries
-        const response = await apiClient.get('/ledger')
-        if (response.success && response.data) {
-          const mappedLedger = response.data.map((e: any) => ({
-            id: e._id || e.id,
-            sellerName: e.sellerName,
-            buyerName: e.buyerName,
-            loaded: e.loaded,
-            conditionFromDate: e.conditionFromDate,
-            conditionToDate: e.conditionToDate
-          }))
-          setLedgerEntries(mappedLedger)
-          alert('Ledger entry deleted successfully!')
-        }
+        await refreshLedgerEntries()
+        alert('Ledger entry deleted successfully!')
       } else {
         alert(`Failed to delete ledger entry: ${result.error || 'Unknown error'}`)
       }
@@ -597,7 +619,8 @@ export default function Home() {
                   {activePage === 'seller' && 'Seller Management'}
                   {activePage === 'buyer' && 'Buyer Management'}
                   {activePage === 'billing' && 'Billing Management'}
-                  {activePage === 'ledger' && 'Daily Ledger'}
+                  {activePage === 'sellerLedger' && 'Seller Daily Ledger'}
+                  {activePage === 'buyerLedger' && 'Buyer Daily Ledger'}
                 </h1>
               </div>
 
@@ -647,14 +670,27 @@ export default function Home() {
                 />
               )}
 
-              {activePage === 'ledger' && (
+              {activePage === 'sellerLedger' && (
                 <DailyLedgerPage 
                   sellers={sellers}
                   buyers={buyers}
-                  ledgerEntries={ledgerEntries}
-                  onAddLedger={addLedgerEntry}
+                  ledgerEntries={sellerLedgerEntries}
+                  onAddLedger={(entry) => addLedgerEntry({ ...entry, mode: 'seller' })}
                   onEditLedger={updateLedgerEntry}
                   onDeleteLedger={deleteLedgerEntry}
+                  mode="seller"
+                />
+              )}
+
+              {activePage === 'buyerLedger' && (
+                <DailyLedgerPage 
+                  sellers={sellers}
+                  buyers={buyers}
+                  ledgerEntries={buyerLedgerEntries}
+                  onAddLedger={(entry) => addLedgerEntry({ ...entry, mode: 'buyer' })}
+                  onEditLedger={updateLedgerEntry}
+                  onDeleteLedger={deleteLedgerEntry}
+                  mode="buyer"
                 />
               )}
             </main>

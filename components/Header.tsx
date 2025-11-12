@@ -10,7 +10,8 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
     { id: 'seller', label: 'Seller' },
     { id: 'buyer', label: 'Buyer' },
     { id: 'billing', label: 'Billing' },
-    { id: 'ledger', label: 'DailyLedger' }
+    { id: 'sellerLedger', label: 'Seller Ledger' },
+    { id: 'buyerLedger', label: 'Buyer Ledger' }
   ]
 
   return (

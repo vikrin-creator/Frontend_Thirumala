@@ -21,8 +21,10 @@ interface LedgerEntry {
   sellerName: string
   buyerName: string
   loaded: 'Yes' | 'No'
+  importLocal?: string
   conditionFromDate: string
   conditionToDate: string
+  mode?: 'seller' | 'buyer'
 }
 
 interface DailyLedgerPageProps {
@@ -31,7 +33,8 @@ interface DailyLedgerPageProps {
   ledgerEntries: LedgerEntry[]
   onAddLedger: (entry: Omit<LedgerEntry, 'id'>) => void
   onEditLedger: (id: number | string, data: Partial<LedgerEntry>) => void
-  onDeleteLedger: (id: number | string) => void
+  onDeleteLedger: (id: number | string, mode?: 'seller' | 'buyer') => void
+  mode?: 'seller' | 'buyer'
 }
 
 export default function DailyLedgerPage({ 
@@ -40,15 +43,17 @@ export default function DailyLedgerPage({
   ledgerEntries,
   onAddLedger,
   onEditLedger,
-  onDeleteLedger
+  onDeleteLedger,
+  mode = 'seller'
 }: DailyLedgerPageProps) {
-  const [showDetails, setShowDetails] = useState(false)
+  const [showDetails, setShowDetails] = useState(true)
   const [editingId, setEditingId] = useState<number | string | null>(null)
   const [editFormData, setEditFormData] = useState<Partial<LedgerEntry>>({})
   const [formData, setFormData] = useState({
     sellerName: '',
     buyerName: '',
     loaded: 'No' as 'Yes' | 'No',
+    importLocal: '',
     conditionFromDate: '',
     conditionToDate: ''
   })
@@ -64,6 +69,7 @@ export default function DailyLedgerPage({
         sellerName: '',
         buyerName: '',
         loaded: 'No',
+        importLocal: '',
         conditionFromDate: '',
         conditionToDate: ''
       })
@@ -100,7 +106,7 @@ export default function DailyLedgerPage({
   }
 
   const handleDelete = (id: number | string) => {
-    onDeleteLedger(id)
+    onDeleteLedger(id, mode)
   }
 
   const handleDownloadLedger = () => {
@@ -218,12 +224,13 @@ export default function DailyLedgerPage({
         <table>
           <thead>
             <tr>
-              <th style="width: 8%;">S.No</th>
-              <th style="width: 22%;">Seller Name</th>
-              <th style="width: 22%;">Buyer Name</th>
-              <th style="width: 16%;">Condition From</th>
-              <th style="width: 16%;">Condition To</th>
-              <th style="width: 16%;">Loaded Status</th>
+              <th style="width: 7%;">S.No</th>
+              <th style="width: 20%;">Seller Name</th>
+              <th style="width: 20%;">Buyer Name</th>
+              <th style="width: 14%;">Condition From</th>
+              <th style="width: 14%;">Condition To</th>
+              <th style="width: 12%;">Import/Local</th>
+              <th style="width: 13%;">Loaded Status</th>
             </tr>
           </thead>
           <tbody>
@@ -234,6 +241,7 @@ export default function DailyLedgerPage({
                 <td>${entry.buyerName}</td>
                 <td>${new Date(entry.conditionFromDate).toLocaleDateString('en-IN')}</td>
                 <td>${new Date(entry.conditionToDate).toLocaleDateString('en-IN')}</td>
+                <td>${entry.importLocal || '-'}</td>
                 <td class="status-no">NOT LOADED</td>
               </tr>
             `).join('')}
@@ -324,6 +332,21 @@ export default function DailyLedgerPage({
               </select>
             </label>
 
+            {/* Import/Local Input */}
+            <label className="flex flex-col w-full">
+              <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                Import/Local
+              </p>
+              <input
+                type="text"
+                name="importLocal"
+                value={formData.importLocal}
+                onChange={handleChange}
+                placeholder="Enter Import/Local type"
+                className="form-input soft-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-gray-100 focus:outline-0 h-12 p-3 text-base font-normal leading-normal"
+              />
+            </label>
+
             {/* Condition From Date */}
             <label className="flex flex-col w-full">
               <p className="text-gray-900 dark:text-gray-200 text-base font-medium leading-normal pb-2">
@@ -362,24 +385,20 @@ export default function DailyLedgerPage({
             >
               Add Ledger Entry
             </button>
-            {ledgerEntries.length > 0 && (
-              <>
-                <button 
-                  type="button"
-                  onClick={() => setShowDetails(!showDetails)}
-                  className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm sm:text-base font-bold leading-normal transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 w-full sm:w-auto"
-                >
-                  {showDetails ? 'Hide Details' : 'View All Ledgers'}
-                </button>
-                <button 
-                  type="button"
-                  onClick={handleDownloadLedger}
-                  className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white text-sm sm:text-base font-bold leading-normal transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg hover:shadow-green-500/25 active:scale-95 w-full sm:w-auto"
-                >
-                  Download Ledger
-                </button>
-              </>
-            )}
+            <button 
+              type="button"
+              onClick={() => setShowDetails(!showDetails)}
+              className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm sm:text-base font-bold leading-normal transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 w-full sm:w-auto"
+            >
+              {showDetails ? 'Hide Details' : 'View All Ledgers'}
+            </button>
+            <button 
+              type="button"
+              onClick={handleDownloadLedger}
+              className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white text-sm sm:text-base font-bold leading-normal transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg hover:shadow-green-500/25 active:scale-95 w-full sm:w-auto"
+            >
+              Download Ledger
+            </button>
           </div>
         </form>
       </div>
@@ -401,6 +420,7 @@ export default function DailyLedgerPage({
                   <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Seller</th>
                   <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Buyer</th>
                   <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Loaded</th>
+                  <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Import/Local</th>
                   <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Condition From</th>
                   <th className="text-left p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Condition To</th>
                   <th className="text-center p-2 sm:p-3 text-gray-900 dark:text-gray-100 font-semibold text-xs sm:text-sm">Actions</th>
@@ -423,6 +443,9 @@ export default function DailyLedgerPage({
                       }`}>
                         {entry.loaded}
                       </span>
+                    </td>
+                    <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm">
+                      {entry.importLocal || '-'}
                     </td>
                     <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm whitespace-nowrap">
                       {entry.conditionFromDate}
