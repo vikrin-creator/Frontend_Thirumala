@@ -102,16 +102,16 @@ export default function DataTable({
       </h2>
       
       <div className="flex flex-col gap-6">
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button 
             onClick={() => setActiveTab(activeTab === (mode === 'seller' ? 'sellers' : 'buyers') ? '' : (mode === 'seller' ? 'sellers' : 'buyers'))}
-            className="px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/25 hover:from-purple-600 hover:to-purple-700 active:scale-95"
+            className="px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/25 hover:from-purple-600 hover:to-purple-700 active:scale-95 w-full sm:w-auto"
           >
             {mode === 'seller' ? 'View Seller Details' : 'View Buyer Details'}
           </button>
           <button 
             onClick={() => setActiveTab(activeTab === 'lorries' ? '' : 'lorries')}
-            className="px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:from-blue-600 hover:to-blue-700 active:scale-95"
+            className="px-6 py-3 rounded-xl text-base font-bold transition-all duration-300 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:from-blue-600 hover:to-blue-700 active:scale-95 w-full sm:w-auto"
           >
             View Lorry Details
           </button>
@@ -140,7 +140,7 @@ export default function DataTable({
                               type="text"
                               value={editFormData.name || ''}
                               onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                              className="w-full px-2 py-1 border rounded text-sm"
+                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             />
                           </td>
                           <td className="p-3">
@@ -148,7 +148,7 @@ export default function DataTable({
                               type="text"
                               value={editFormData.address || ''}
                               onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
-                              className="w-full px-2 py-1 border rounded text-sm"
+                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             />
                           </td>
                           <td className="p-3">
@@ -156,7 +156,7 @@ export default function DataTable({
                               type="text"
                               value={editFormData.mobile || ''}
                               onChange={(e) => setEditFormData({ ...editFormData, mobile: e.target.value })}
-                              className="w-full px-2 py-1 border rounded text-sm"
+                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             />
                           </td>
                           <td className="p-3">
@@ -211,7 +211,7 @@ export default function DataTable({
                               type="text"
                               value={editFormData.name || ''}
                               onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                              className="w-full px-2 py-1 border rounded text-sm"
+                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             />
                           </td>
                           <td className="p-3">
@@ -219,7 +219,7 @@ export default function DataTable({
                               type="text"
                               value={editFormData.address || ''}
                               onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
-                              className="w-full px-2 py-1 border rounded text-sm"
+                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             />
                           </td>
                           <td className="p-3">
@@ -227,7 +227,7 @@ export default function DataTable({
                               type="text"
                               value={editFormData.mobile || ''}
                               onChange={(e) => setEditFormData({ ...editFormData, mobile: e.target.value })}
-                              className="w-full px-2 py-1 border rounded text-sm"
+                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             />
                           </td>
                           <td className="p-3">

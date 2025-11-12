@@ -112,12 +112,12 @@ export default function SellerForm({ onAddSeller, onViewDetails }: SellerFormPro
           </div>
         )}
         
-        <div className="flex justify-end gap-4 pt-6">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-6">
           {onViewDetails && (
             <button 
               type="button"
               onClick={onViewDetails}
-              className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
+              className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 w-full sm:w-auto"
             >
               View Seller Details
             </button>
@@ -125,7 +125,7 @@ export default function SellerForm({ onAddSeller, onViewDetails }: SellerFormPro
           <button 
             type="submit"
             disabled={loading}
-            className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white text-base font-bold leading-normal transition-all duration-300 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
           >
             {loading ? 'Saving...' : 'Save Seller'}
           </button>

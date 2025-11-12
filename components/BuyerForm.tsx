@@ -112,12 +112,12 @@ export default function BuyerForm({ onAddBuyer, onViewDetails }: BuyerFormProps)
           </div>
         )}
         
-        <div className="flex justify-end gap-4 pt-6">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-6">
           {onViewDetails && (
             <button 
               type="button"
               onClick={onViewDetails}
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-500 text-white text-base font-bold leading-normal transition-colors hover:bg-blue-600"
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-500 text-white text-base font-bold leading-normal transition-colors hover:bg-blue-600 w-full sm:w-auto"
             >
               View Lorry Details
             </button>
@@ -125,7 +125,7 @@ export default function BuyerForm({ onAddBuyer, onViewDetails }: BuyerFormProps)
           <button 
             type="submit"
             disabled={loading}
-            className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary text-white text-base font-bold leading-normal transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary text-white text-base font-bold leading-normal transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
           >
             {loading ? 'Saving...' : 'Save Buyer'}
           </button>

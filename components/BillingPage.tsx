@@ -553,39 +553,41 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
             return (
               <div key={bill.id} className="mb-6 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                 {/* Bill Header */}
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 flex justify-between items-center">
-                  <div className="flex gap-6">
-                    <div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Bill Number:</span>
-                      <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{bill.billNumber}</p>
+                <div className="bg-gray-50 dark:bg-gray-800 p-4">
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                      <div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Bill Number:</span>
+                        <p className="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100">{bill.billNumber}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Party Name:</span>
+                        <p className="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100">{bill.party}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Type:</span>
+                        <p className="text-sm">
+                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                            bill.partyType === 'seller' 
+                              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' 
+                              : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                          }`}>
+                            {bill.partyType === 'seller' ? 'Seller' : 'Buyer'}
+                          </span>
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Date:</span>
+                        <p className="text-sm text-gray-800 dark:text-gray-100">{bill.date}</p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Party Name:</span>
-                      <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{bill.party}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Type:</span>
-                      <p className="text-sm">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          bill.partyType === 'seller' 
-                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' 
-                            : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
-                        }`}>
-                          {bill.partyType === 'seller' ? 'Seller' : 'Buyer'}
-                        </span>
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Date:</span>
-                      <p className="text-sm text-gray-800 dark:text-gray-100">{bill.date}</p>
-                    </div>
+                    <button 
+                      onClick={() => handlePrintBill(bill)}
+                      className="w-full md:w-auto px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 text-sm font-medium transition-colors"
+                    >
+                      🖨️ View/Print Bill
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => handlePrintBill(bill)}
-                    className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 text-sm font-medium transition-colors"
-                  >
-                    🖨️ View/Print Bill
-                  </button>
                 </div>
 
                 {/* Lorries Table */}

@@ -418,7 +418,7 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
           <div className="flex justify-end pt-8">
             <button 
               type="submit"
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary text-white text-base font-bold leading-normal transition-colors hover:bg-primary/90"
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary text-white text-base font-bold leading-normal transition-colors hover:bg-primary/90 w-full sm:w-auto"
             >
               {mode === 'seller' ? 'Add Lorry Details' : 'Add Lorry Details'}
             </button>

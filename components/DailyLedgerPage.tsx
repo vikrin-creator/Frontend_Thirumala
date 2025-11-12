@@ -89,13 +89,14 @@ export default function DailyLedgerPage({
       sellerName: entry.sellerName,
       buyerName: entry.buyerName,
       loaded: entry.loaded,
+      importLocal: entry.importLocal,
       conditionFromDate: entry.conditionFromDate,
       conditionToDate: entry.conditionToDate
     })
   }
 
   const handleSaveEdit = (id: number | string) => {
-    onEditLedger(id, editFormData)
+    onEditLedger(id, { ...editFormData, mode })
     setEditingId(null)
     setEditFormData({})
   }
@@ -406,7 +407,7 @@ export default function DailyLedgerPage({
       {/* All Ledgers Details Section */}
       {showDetails && ledgerEntries.length > 0 && (
         <div className="flex flex-col gap-4 p-6 rounded-2xl form-container soft-shadow-lg">
-          <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
             <h3 className="text-gray-900 dark:text-gray-100 text-base sm:text-lg lg:text-xl font-bold leading-tight">
               All Daily Ledger Entries
             </h3>
@@ -429,46 +430,119 @@ export default function DailyLedgerPage({
               <tbody>
                 {ledgerEntries.map((entry) => (
                   <tr key={entry.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm font-medium">
-                      {entry.sellerName}
-                    </td>
-                    <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm font-medium">
-                      {entry.buyerName}
-                    </td>
-                    <td className="p-2 sm:p-3">
-                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                        entry.loaded === 'Yes' 
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                      }`}>
-                        {entry.loaded}
-                      </span>
-                    </td>
-                    <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm">
-                      {entry.importLocal || '-'}
-                    </td>
-                    <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm whitespace-nowrap">
-                      {entry.conditionFromDate}
-                    </td>
-                    <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm whitespace-nowrap">
-                      {entry.conditionToDate}
-                    </td>
-                    <td className="p-3 text-center">
-                      <div className="flex flex-col sm:flex-row justify-center gap-2">
-                        <button
-                          onClick={() => handleEditClick(entry)}
-                          className="px-3 py-1.5 sm:py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(entry.id)}
-                          className="px-3 py-1.5 sm:py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+                    {editingId === entry.id ? (
+                      <>
+                        <td className="p-2 sm:p-3">
+                          <input
+                            type="text"
+                            value={editFormData.sellerName || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, sellerName: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                          />
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          <input
+                            type="text"
+                            value={editFormData.buyerName || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, buyerName: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                          />
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          <select
+                            value={editFormData.loaded || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, loaded: e.target.value as 'Yes' | 'No' })}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                          >
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </select>
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          <input
+                            type="text"
+                            value={editFormData.importLocal || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, importLocal: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                          />
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          <input
+                            type="date"
+                            value={editFormData.conditionFromDate || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, conditionFromDate: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                          />
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          <input
+                            type="date"
+                            value={editFormData.conditionToDate || ''}
+                            onChange={(e) => setEditFormData({ ...editFormData, conditionToDate: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                          />
+                        </td>
+                        <td className="p-3 text-center">
+                          <div className="flex flex-col sm:flex-row justify-center gap-2">
+                            <button
+                              onClick={() => handleSaveEdit(entry.id)}
+                              className="px-3 py-1.5 sm:py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
+                            >
+                              ✓ Save
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="px-3 py-1.5 sm:py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
+                            >
+                              ✕ Cancel
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm font-medium">
+                          {entry.sellerName}
+                        </td>
+                        <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm font-medium">
+                          {entry.buyerName}
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                            entry.loaded === 'Yes' 
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          }`}>
+                            {entry.loaded}
+                          </span>
+                        </td>
+                        <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm">
+                          {entry.importLocal || '-'}
+                        </td>
+                        <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm whitespace-nowrap">
+                          {entry.conditionFromDate}
+                        </td>
+                        <td className="p-2 sm:p-3 text-gray-800 dark:text-gray-200 text-xs sm:text-sm whitespace-nowrap">
+                          {entry.conditionToDate}
+                        </td>
+                        <td className="p-3 text-center">
+                          <div className="flex flex-col sm:flex-row justify-center gap-2">
+                            <button
+                              onClick={() => handleEditClick(entry)}
+                              className="px-3 py-1.5 sm:py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(entry.id)}
+                              className="px-3 py-1.5 sm:py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>

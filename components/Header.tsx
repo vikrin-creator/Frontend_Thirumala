@@ -1,4 +1,6 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from 'react'
 
 interface HeaderProps {
   activePage: string
@@ -6,6 +8,8 @@ interface HeaderProps {
 }
 
 export default function Header({ activePage, setActivePage }: HeaderProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  
   const navItems = [
     { id: 'seller', label: 'Seller' },
     { id: 'buyer', label: 'Buyer' },
@@ -13,6 +17,11 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
     { id: 'sellerLedger', label: 'Seller Ledger' },
     { id: 'buyerLedger', label: 'Buyer Ledger' }
   ]
+
+  const handleNavClick = (page: string) => {
+    setActivePage(page)
+    setMobileMenuOpen(false)
+  }
 
   return (
     <header className="w-full border border-purple-200 dark:border-purple-700/40 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 py-3 sm:py-4 mb-4 sm:mb-6 lg:mb-8 bg-white/95 dark:bg-slate-800/80 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg">
@@ -31,34 +40,42 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
           </h2>
         </div>
 
-        {/* Mobile Navigation */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActivePage(item.id)}
-              className={`relative px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-300 ${
-                activePage === item.id
-                  ? 'text-purple-600 dark:text-purple-400'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-purple-500 dark:hover:text-purple-400'
-              }`}
-            >
-              {item.label}
-              {activePage === item.id && (
-                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full" />
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Mobile Profile */}
-        <div 
-          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8 sm:size-9" 
-          style={{
-            backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAQf8SzIzVrQpbVmsZVnyBLVyGHLe7F9bJGwfCm3NGwduUY2aHblgCCOyZNyf1ZYRKyh8zZ2TYQviQlpSM_qxudTnEKVO69KXrsrYJlIwtIz9r_SH0E3jqFK9pRv6SohKrQv2PbRsg42BnM7dVxWrHuPicUgiy7Dc7NnGi7NXxZ8XvC2sbrPbeKEelSkamwQvsAI7M3sbLaLY9PFsIsrbRUibgFs2yEFIUkX2qj-jRs2wd3vh_xj_Lj7Zk_EcFPZHpWTMbYXE61eA0")'
-          }}
-        />
+        {/* Hamburger Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+          aria-label="Toggle menu"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {mobileMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
       </div>
+
+      {/* Mobile Dropdown Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+          <div className="flex flex-col gap-2">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item.id)}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  activePage === item.id
+                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Desktop/Tablet Layout */}
       <div className="hidden md:grid grid-cols-3 items-center">
