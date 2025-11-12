@@ -260,12 +260,14 @@ export default function Home() {
         newLorry.sellerName = seller?.name || ''
         sellerName = seller?.name || ''
         buyerName = lorry.counterpartyName
+        // In seller mode: counterpartyName is buyer name (keep as is)
       } else {
         // In buyer mode: buyer is the main entity, seller is the counterparty
         const buyer = buyers.find(b => b.id.toString() === lorry.sellerId.toString())
         buyerName = buyer?.name || ''
-        sellerName = lorry.counterpartyName // counterpartyName is the seller in buyer mode
+        sellerName = lorry.counterpartyName // counterpartyName from form is the seller in buyer mode
         newLorry.sellerName = sellerName // Store seller name in sellerName field
+        newLorry.counterpartyName = buyerName // Store buyer name in counterpartyName for display
       }
 
       // Save lorry to backend with mode information
@@ -292,6 +294,7 @@ export default function Home() {
         }
 
         // Auto-update ledger: set loaded = "Yes" for this seller-buyer combination
+        console.log('🚀 Calling updateLedgerLoadedStatus with:', { sellerName, buyerName, mode })
         await updateLedgerLoadedStatus(sellerName, buyerName)
       }
     } catch (error) {
@@ -302,13 +305,20 @@ export default function Home() {
 
   const updateLedgerLoadedStatus = async (sellerName: string, buyerName: string) => {
     try {
-      // Find existing ledger entry for this seller-buyer combination
+      console.log('🔍 Updating ledger for:', { sellerName, buyerName })
+      console.log('📋 Current ledger entries:', ledgerEntries.map(e => ({ seller: e.sellerName, buyer: e.buyerName, loaded: e.loaded })))
+      
+      // Find existing ledger entry for this seller-buyer combination (case-insensitive)
       const existingEntry = ledgerEntries.find(
-        entry => entry.sellerName === sellerName && entry.buyerName === buyerName
+        entry => entry.sellerName.toUpperCase() === sellerName.toUpperCase() && 
+                 entry.buyerName.toUpperCase() === buyerName.toUpperCase()
       )
+
+      console.log('🎯 Found existing entry:', existingEntry ? `ID: ${existingEntry.id}, Loaded: ${existingEntry.loaded}` : 'No matching entry found')
 
       if (existingEntry) {
         // Update existing entry to loaded = "Yes"
+        console.log('✅ Updating existing entry to loaded="Yes"')
         await apiClient.put(`/ledger/${existingEntry.id}`, {
           sellerName: existingEntry.sellerName,
           buyerName: existingEntry.buyerName,
@@ -318,6 +328,7 @@ export default function Home() {
         })
       } else {
         // Create new entry with loaded = "Yes"
+        console.log('➕ Creating new ledger entry with loaded="Yes"')
         const today = new Date().toISOString().split('T')[0]
         await apiClient.post('/ledger', {
           sellerName,
@@ -329,6 +340,7 @@ export default function Home() {
       }
 
       // Refresh ledger entries
+      console.log('🔄 Refreshing ledger entries from backend')
       const response = await apiClient.get('/ledger')
       if (response.success && response.data) {
         const mappedLedger = response.data.map((entry: any) => ({
@@ -340,9 +352,10 @@ export default function Home() {
           conditionToDate: entry.conditionToDate
         }))
         setLedgerEntries(mappedLedger)
+        console.log('✅ Ledger entries refreshed successfully:', mappedLedger.length, 'entries')
       }
     } catch (error) {
-      console.error('Failed to update ledger loaded status:', error)
+      console.error('❌ Failed to update ledger loaded status:', error)
     }
   }
 
@@ -591,7 +604,7 @@ export default function Home() {
               {activePage === 'seller' && (
                 <>
                   <SellerForm onAddSeller={addSeller} onViewDetails={handleViewSellerDetails} />
-                  <LorryForm sellers={sellers} onAddLorry={(lorry) => addLorry(lorry, 'seller')} mode="seller" />
+                  <LorryForm sellers={sellers} buyers={buyers} onAddLorry={(lorry) => addLorry(lorry, 'seller')} mode="seller" />
                   <div id="details-section">
                     <DataTable 
                       sellers={sellers}
@@ -610,7 +623,7 @@ export default function Home() {
               {activePage === 'buyer' && (
                 <>
                   <BuyerForm onAddBuyer={addBuyer} onViewDetails={handleViewLorryDetails} />
-                  <LorryForm buyers={buyers} onAddLorry={(lorry) => addLorry(lorry, 'buyer')} mode="buyer" />
+                  <LorryForm sellers={sellers} buyers={buyers} onAddLorry={(lorry) => addLorry(lorry, 'buyer')} mode="buyer" />
                   <div id="details-section">
                     <DataTable 
                       buyers={buyers}
