@@ -38,10 +38,11 @@ interface Lorry {
 interface BillingPageProps {
   sellers: Seller[]
   buyers: Buyer[]
-  lorries: Lorry[]
+  sellerLorries: Lorry[]
+  buyerLorries: Lorry[]
 }
 
-export default function BillingPage({ sellers, buyers, lorries }: BillingPageProps) {
+export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorries }: BillingPageProps) {
   const [activeBillTab, setActiveBillTab] = useState<'seller' | 'buyer'>('seller')
   const [selectedSeller, setSelectedSeller] = useState('')
   const [selectedBuyer, setSelectedBuyer] = useState('')
@@ -50,8 +51,8 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
   const [showSellerDropdown, setShowSellerDropdown] = useState(false)
   const [showBuyerDropdown, setShowBuyerDropdown] = useState(false)
   const [generatedBills, setGeneratedBills] = useState<any[]>([])
-  const totalCommission = lorries.reduce((sum, lorry) => sum + lorry.totalCommission, 0)
-  const totalAmount = lorries.reduce((sum, lorry) => sum + lorry.amount, 0)
+  const totalCommission = [...sellerLorries, ...buyerLorries].reduce((sum, lorry) => sum + lorry.totalCommission, 0)
+  const totalAmount = [...sellerLorries, ...buyerLorries].reduce((sum, lorry) => sum + lorry.amount, 0)
 
   // Filter sellers based on search
   const filteredSellers = sellers.filter(seller =>
@@ -81,51 +82,135 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
     const seller = sellers.find(s => s.id.toString() === sellerId)
     if (!seller) return
 
-    // Filter lorries by seller name (matches both seller mode and buyer mode lorries)
-    const sellerLorries = lorries.filter(lorry => 
+    // Filter only seller lorries for this seller
+    const filteredSellerLorries = sellerLorries.filter(lorry => 
       lorry.sellerName.toLowerCase() === seller.name.toLowerCase()
     )
     
-    const totalCommissionForSeller = sellerLorries.reduce((sum, lorry) => sum + lorry.totalCommission, 0)
+    const totalCommissionForSeller = filteredSellerLorries.reduce((sum, lorry) => sum + lorry.totalCommission, 0)
     
-    const newBill = {
-      id: Date.now(),
-      type: billType,
-      party: seller.name,
-      partyType: 'seller',
-      amount: totalCommissionForSeller,
-      date: new Date().toLocaleDateString(),
-      items: sellerLorries,
-      billNumber: `SB${Date.now()}`,
+    // Check if total exceeds ₹50,000
+    if (totalCommissionForSeller > 50000) {
+      // Split lorries into two parts for dual bills
+      const midPoint = Math.ceil(filteredSellerLorries.length / 2)
+      const firstHalf = filteredSellerLorries.slice(0, midPoint)
+      const secondHalf = filteredSellerLorries.slice(midPoint)
+      
+      const firstHalfTotal = firstHalf.reduce((sum, lorry) => sum + lorry.totalCommission, 0)
+      const secondHalfTotal = secondHalf.reduce((sum, lorry) => sum + lorry.totalCommission, 0)
+      
+      // Create TIRUMULA BROKERS bill
+      const tirumulaBill = {
+        id: Date.now(),
+        type: billType,
+        party: seller.name,
+        partyType: 'seller',
+        amount: firstHalfTotal,
+        date: new Date().toLocaleDateString(),
+        items: firstHalf,
+        billNumber: `SB${Date.now()}`,
+        companyName: 'TIRUMULA BROKERS'
+      }
+      
+      // Create BALAJI BROKERS bill
+      const balajiBill = {
+        id: Date.now() + 1,
+        type: billType,
+        party: seller.name,
+        partyType: 'seller',
+        amount: secondHalfTotal,
+        date: new Date().toLocaleDateString(),
+        items: secondHalf,
+        billNumber: `SB${Date.now() + 1}`,
+        companyName: 'BALAJI BROKERS'
+      }
+      
+      setGeneratedBills(prev => [balajiBill, tirumulaBill, ...prev])
+      alert(`Dual bills generated for ${seller.name}\nTIRUMULA BROKERS: ₹${firstHalfTotal.toLocaleString()}\nBALAJI BROKERS: ₹${secondHalfTotal.toLocaleString()}\nTotal: ₹${totalCommissionForSeller.toLocaleString()}`)
+    } else {
+      // Single bill for amounts ≤ ₹50,000
+      const newBill = {
+        id: Date.now(),
+        type: billType,
+        party: seller.name,
+        partyType: 'seller',
+        amount: totalCommissionForSeller,
+        date: new Date().toLocaleDateString(),
+        items: filteredSellerLorries,
+        billNumber: `SB${Date.now()}`,
+        companyName: 'TIRUMULA BROKERS'
+      }
+      
+      setGeneratedBills(prev => [newBill, ...prev])
+      alert(`${billType} generated for ${seller.name} - Amount: ₹${totalCommissionForSeller.toLocaleString()}`)
     }
-
-    setGeneratedBills(prev => [newBill, ...prev])
-    alert(`${billType} generated for ${seller.name} - Amount: ₹${totalCommissionForSeller.toLocaleString()}`)
   }
 
   const generateBuyerBill = (buyerId: string, billType: string) => {
     const buyer = buyers.find(b => b.id.toString() === buyerId)
     if (!buyer) return
 
-    // Filter lorries by buyer name (only buyer mode lorries where this buyer purchased)
-    const buyerLorries = lorries.filter(lorry => 
+    // Filter only buyer lorries for this buyer
+    const filteredBuyerLorries = buyerLorries.filter(lorry => 
       lorry.counterpartyName && lorry.counterpartyName.toLowerCase() === buyer.name.toLowerCase()
     )
-    const totalAmountForBuyer = buyerLorries.reduce((sum, lorry) => sum + lorry.amount, 0)
+    const totalCommissionForBuyer = filteredBuyerLorries.reduce((sum, lorry) => sum + lorry.totalCommission, 0)
     
-    const newBill = {
-      id: Date.now(),
-      type: billType,
-      party: buyer.name,
-      partyType: 'buyer',
-      amount: totalAmountForBuyer,
-      date: new Date().toLocaleDateString(),
-      items: buyerLorries,
-      billNumber: `BB${Date.now()}`,
+    // Check if total exceeds ₹50,000
+    if (totalCommissionForBuyer > 50000) {
+      // Split lorries into two parts for dual bills
+      const midPoint = Math.ceil(filteredBuyerLorries.length / 2)
+      const firstHalf = filteredBuyerLorries.slice(0, midPoint)
+      const secondHalf = filteredBuyerLorries.slice(midPoint)
+      
+      const firstHalfTotal = firstHalf.reduce((sum, lorry) => sum + lorry.totalCommission, 0)
+      const secondHalfTotal = secondHalf.reduce((sum, lorry) => sum + lorry.totalCommission, 0)
+      
+      // Create TIRUMULA BROKERS bill
+      const tirumulaBill = {
+        id: Date.now(),
+        type: billType,
+        party: buyer.name,
+        partyType: 'buyer',
+        amount: firstHalfTotal,
+        date: new Date().toLocaleDateString(),
+        items: firstHalf,
+        billNumber: `BB${Date.now()}`,
+        companyName: 'TIRUMULA BROKERS'
+      }
+      
+      // Create BALAJI BROKERS bill
+      const balajiBill = {
+        id: Date.now() + 1,
+        type: billType,
+        party: buyer.name,
+        partyType: 'buyer',
+        amount: secondHalfTotal,
+        date: new Date().toLocaleDateString(),
+        items: secondHalf,
+        billNumber: `BB${Date.now() + 1}`,
+        companyName: 'BALAJI BROKERS'
+      }
+      
+      setGeneratedBills(prev => [balajiBill, tirumulaBill, ...prev])
+      alert(`Dual bills generated for ${buyer.name}\nTIRUMULA BROKERS: ₹${firstHalfTotal.toLocaleString()}\nBALAJI BROKERS: ₹${secondHalfTotal.toLocaleString()}\nTotal: ₹${totalCommissionForBuyer.toLocaleString()}`)
+    } else {
+      // Single bill for amounts ≤ ₹50,000
+      const newBill = {
+        id: Date.now(),
+        type: billType,
+        party: buyer.name,
+        partyType: 'buyer',
+        amount: totalCommissionForBuyer,
+        date: new Date().toLocaleDateString(),
+        items: filteredBuyerLorries,
+        billNumber: `BB${Date.now()}`,
+        companyName: 'TIRUMULA BROKERS'
+      }
+      
+      setGeneratedBills(prev => [newBill, ...prev])
+      alert(`${billType} generated for ${buyer.name} - Amount: ₹${totalCommissionForBuyer.toLocaleString()}`)
     }
-
-    setGeneratedBills(prev => [newBill, ...prev])
-    alert(`${billType} generated for ${buyer.name} - Amount: ₹${totalAmountForBuyer.toLocaleString()}`)
   }
 
   const handlePrintBill = (bill: any) => {
@@ -153,50 +238,92 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
           }
           body {
             font-family: Arial, sans-serif;
-            padding: 20px;
+            padding: 15px;
             background: white;
             color: black;
+            font-size: 12px;
+          }
+          .header-container {
+            border: 2px solid black;
+            margin-bottom: 0;
           }
           .header {
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 15px;
+            padding: 10px;
+            border-bottom: 1px solid black;
+            background: white;
           }
           .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #333;
+            margin: 0 0 5px 0;
+            font-size: 20px;
+            font-weight: bold;
+            color: black;
           }
-          .bill-info {
+          .header .address {
+            font-size: 10px;
+            margin: 2px 0;
+            line-height: 1.2;
+          }
+          .contact-info {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
-            padding: 10px;
-            background: #f5f5f5;
+            padding: 5px 10px;
+            font-size: 9px;
+            border-bottom: 1px solid black;
           }
-          .bill-info div {
+          .bill-title {
+            text-align: center;
+            padding: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: 1px solid black;
+            background: #f0f0f0;
+          }
+          .party-info {
+            padding: 8px 10px;
+            border-bottom: 1px solid black;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+          }
+          .party-left {
             flex: 1;
           }
-          .bill-info strong {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
+          .party-right {
+            text-align: right;
+            font-size: 11px;
+          }
+          .party-info .name {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 3px;
+          }
+          .party-info .address {
+            font-size: 11px;
+            color: #333;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-            font-size: 12px;
+            font-size: 10px;
+          }
+          th, td {
+            border: 1px solid black;
+            padding: 4px 3px;
+            text-align: center;
+            vertical-align: middle;
           }
           th {
-            background-color: #333;
-            color: white;
-            padding: 10px 5px;
-            text-align: left;
+            background-color: white;
             font-weight: bold;
-            border: 1px solid #333;
+            font-size: 9px;
+            line-height: 1.1;
           }
+          td {
+            font-size: 9px;
+          }
+          .text-left { text-align: left !important; }
+          .text-right { text-align: right !important; }
           td {
             padding: 8px 5px;
             border: 1px solid #ddd;
@@ -204,31 +331,7 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
           tr:nth-child(even) {
             background-color: #f9f9f9;
           }
-          .totals {
-            margin-top: 20px;
-            text-align: right;
-            font-size: 14px;
-          }
-          .totals div {
-            margin: 5px 0;
-            padding: 5px 10px;
-          }
-          .totals .grand-total {
-            font-size: 16px;
-            font-weight: bold;
-            background: #333;
-            color: white;
-            padding: 10px;
-            margin-top: 10px;
-          }
-          .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 15px;
-          }
+
           .print-btn {
             position: fixed;
             top: 10px;
@@ -252,81 +355,87 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
       <body>
         <button class="print-btn" onclick="window.print()">🖨️ Print</button>
         
-        <div class="header">
-          <h1>THIRUMALA BROKER</h1>
-          <p>Bill Document</p>
-        </div>
-
-        <div class="bill-info">
-          <div>
-            <strong>Bill Number:</strong>
-            ${bill.billNumber}
+        <div class="header-container">
+          <div class="header">
+            <h1>${bill.companyName || 'TIRUMULA BROKERS'}</h1>
+            <div class="address">ADDRESS NO: ETUKURU ROAD</div>
+            <div class="address">OPP FANCY DISUCTION PLAZA, GUNTUR.</div>
+            <div class="address">E-MAIL ID: ${bill.companyName === 'BALAJI BROKERS' ? 'tirumulasrinu@gmail.com' : 'tirumalabm@gmail.com'}</div>
           </div>
-          <div>
-            <strong>Party Name:</strong>
-            ${bill.party}
+          
+          <div class="contact-info">
+            <div>SRINU: 9490126798</div>
+            <div>KAREEM: 9848133973</div>
+            <div>OFFICE: 08632238138, 08632238139</div>
           </div>
-          <div>
-            <strong>Party Type:</strong>
-            ${bill.partyType === 'seller' ? 'Seller' : 'Buyer'}
-          </div>
-          <div>
-            <strong>Generated Date:</strong>
-            ${bill.date}
+          
+          <div class="bill-title">BROKERAGE BILL</div>
+          
+          <div class="party-info">
+            <div class="party-left">
+              <div class="name">NAME:- ${bill.party.toUpperCase()}</div>
+              <div class="address">ADDRESS:- ${bill.items[0]?.sellerName || 'Guntur'}</div>
+              <div style="margin-top: 10px; font-size: 10px;">MOBILE NO:-</div>
+            </div>
+            <div class="party-right">
+              <div>BILL NO: ${bill.billNumber.replace('SB', '').replace('BB', '')}</div>
+              <div style="margin-top: 20px;">DATE:-</div>
+            </div>
           </div>
         </div>
 
         <table>
           <thead>
             <tr>
-              <th>S.No</th>
-              <th>Lorry No.</th>
-              <th>${bill.partyType === 'seller' ? 'Buyer Name' : 'Seller Name'}</th>
-              <th>Unload Date</th>
-              <th>Buying Date</th>
-              <th>Bargain Date</th>
-              <th>Bill Type</th>
-              <th>Bill Name</th>
-              <th>Bill Number</th>
+              <th>Sl</th>
+              <th>Bargain<br/>date</th>
+              <th>Loading<br/>date</th>
+              <th>SellerName</th>
+              <th>Bill<br/>Number</th>
               <th>Item</th>
-              <th>Quantity</th>
+              <th>Rate</th>
+              <th>Qts</th>
+              <th>Broker<br/>age</th>
               <th>Amount</th>
-              <th>Commission</th>
-              <th>Total Commission</th>
             </tr>
           </thead>
           <tbody>
             ${bill.items.map((item: any, index: number) => `
               <tr>
                 <td>${index + 1}</td>
-                <td>${item.lorryNumber}</td>
-                <td>${item.counterpartyName}</td>
-                <td>${item.unloadDate}</td>
-                <td>${item.buyingDate}</td>
                 <td>${item.bargainDate}</td>
-                <td>${item.billType || 'local'}</td>
-                <td>${item.billName || '-'}</td>
-                <td>${item.billNumber || '-'}</td>
-                <td>${item.itemName}</td>
-                <td>${item.quantity}</td>
-                <td>₹${item.amount.toLocaleString()}</td>
-                <td>₹${item.commission.toLocaleString()}</td>
-                <td>₹${item.totalCommission.toLocaleString()}</td>
+                <td>${item.unloadDate}</td>
+                <td class="text-left">${item.sellerName}</td>
+                <td>${item.billNumber}</td>
+                <td class="text-left">${item.itemName}</td>
+                <td class="text-right">${item.commission || 0}</td>
+                <td class="text-right">${item.quantity}</td>
+                <td class="text-right">12.0</td>
+                <td class="text-right">${item.totalCommission.toLocaleString()}</td>
               </tr>
             `).join('')}
+            <tr style="border-top: 2px solid black; font-weight: bold; background-color: #f0f0f0;">
+              <td colspan="9" style="text-align: right; padding: 8px; font-size: 12px;">TOTAL AMOUNT:</td>
+              <td style="text-align: right; padding: 8px; font-size: 12px;">₹${totalCommission.toLocaleString()}</td>
+            </tr>
           </tbody>
         </table>
 
-        <div class="totals">
-          <div><strong>Total Amount:</strong> ₹${totalAmount.toLocaleString()}</div>
-          <div class="grand-total">
-            <strong>Grand Total Commission:</strong> ₹${totalCommission.toLocaleString()}
+        <div style="margin-top: 20px; padding: 10px; border: 1px solid black; background-color: #f9f9f9;">
+          <div style="font-weight: bold; font-size: 12px; margin-bottom: 8px; text-align: center;">BANK DETAILS</div>
+          <div style="font-size: 10px; line-height: 1.4;">
+            ${bill.companyName === 'BALAJI BROKERS' ? `
+              <div><strong>BANK NAME:</strong> STATE OF INDIA BANK</div>
+              <div><strong>ACCOUNT NUMBER:</strong> 33421252876</div>
+              <div><strong>IFSC CODE:</strong> SBIN0004758</div>
+              <div><strong>BANK ADDRESS:</strong> SANGADIGUNTA ETUKURI ROAD GUNTUR(04758)</div>
+            ` : `
+              <div><strong>BANK NAME:</strong> KOTAK MAHINDRA BANK</div>
+              <div><strong>ACCOUNT NUMBER:</strong> 317011002606</div>
+              <div><strong>IFSC CODE:</strong> KKBK0007746</div>
+              <div><strong>BANK ADDRESS:</strong> GUNTUR MAIN</div>
+            `}
           </div>
-        </div>
-
-        <div class="footer">
-          <p>This is a computer-generated bill. Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-          <p>Thirumala Broker - Contact: [Your Contact Info]</p>
         </div>
 
         <script>
@@ -565,6 +674,10 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
                         <p className="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100">{bill.party}</p>
                       </div>
                       <div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Company:</span>
+                        <p className="text-sm font-semibold text-green-600 dark:text-green-400">{bill.companyName || 'TIRUMULA BROKERS'}</p>
+                      </div>
+                      <div>
                         <span className="text-xs text-gray-500 dark:text-gray-400">Type:</span>
                         <p className="text-sm">
                           <span className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -616,7 +729,9 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
                       {bill.items.map((lorry: any, index: number) => (
                         <tr key={`${bill.id}-${lorry.id || index}`}>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.lorryNumber}</td>
-                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.counterpartyName}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">
+                            {bill.partyType === 'seller' ? lorry.counterpartyName : lorry.sellerName}
+                          </td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.unloadDate}</td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.buyingDate}</td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.bargainDate}</td>
@@ -625,7 +740,9 @@ export default function BillingPage({ sellers, buyers, lorries }: BillingPagePro
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billNumber || '-'}</td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.itemName}</td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.quantity}</td>
-                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.amount.toLocaleString()}</td>
+                          <td className="p-3 text-sm text-gray-800 dark:text-gray-100">
+                            ₹{(bill.partyType === 'buyer' ? lorry.totalCommission : lorry.amount).toLocaleString()}
+                          </td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.commission.toLocaleString()}</td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.totalCommission.toLocaleString()}</td>
                         </tr>

@@ -46,12 +46,8 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
   const [totalCommission, setTotalCommission] = useState(0)
 
   useEffect(() => {
-    if (formData.billType === 'local') {
-      setTotalCommission(formData.quantity * formData.commission)
-    } else {
-      setTotalCommission(0)
-    }
-  }, [formData.quantity, formData.commission, formData.billType])
+    setTotalCommission(formData.quantity * formData.commission)
+  }, [formData.quantity, formData.commission])
 
   // Filter sellers/buyers based on search term
   const filteredItems = mode === 'seller' 
@@ -367,38 +363,26 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
               />
             </label>
 
-            <label className="flex flex-col">
-              <p className="text-gray-800 dark:text-gray-200 text-base font-medium leading-normal pb-2">
-                Amount
-              </p>
-              <input 
-                id="amount"
-                name="amount"
-                value={formData.amount}
-                onChange={handleChange}
-                className="soft-input" 
-                placeholder="e.g., 50000" 
-                type="number"
-                autoComplete="off"
-              />
-            </label>
+
+
+            {formData.billType !== 'imported' && (
+              <label className="flex flex-col">
+                <p className="text-gray-800 dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                  Commission
+                </p>
+                <input 
+                  name="commission"
+                  value={formData.commission}
+                  onChange={handleChange}
+                  className="soft-input" 
+                  placeholder="e.g., 50" 
+                  type="number"
+                />
+              </label>
+            )}
 
             {formData.billType === 'local' && (
               <>
-                <label className="flex flex-col">
-                  <p className="text-gray-800 dark:text-gray-200 text-base font-medium leading-normal pb-2">
-                    Commission
-                  </p>
-                  <input 
-                    name="commission"
-                    value={formData.commission}
-                    onChange={handleChange}
-                    className="soft-input" 
-                    placeholder="e.g., 50" 
-                    type="number"
-                  />
-                </label>
-
                 <label className="flex flex-col md:col-span-2 lg:col-span-1">
                   <p className="text-gray-800 dark:text-gray-200 text-base font-medium leading-normal pb-2">
                     Total Commission

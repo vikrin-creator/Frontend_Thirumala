@@ -666,7 +666,8 @@ export default function Home() {
                 <BillingPage 
                   sellers={sellers}
                   buyers={buyers}
-                  lorries={[...sellerLorries, ...buyerLorries]}
+                  sellerLorries={sellerLorries}
+                  buyerLorries={buyerLorries}
                 />
               )}
 
