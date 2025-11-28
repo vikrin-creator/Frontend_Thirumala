@@ -25,7 +25,7 @@ interface Lorry {
   billNumber: string
   itemName: string
   quantity: number
-  amount: number
+  rate: number
   commission: number
   totalCommission: number
 }
@@ -294,7 +294,7 @@ export default function DataTable({
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Number</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Item</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Quantity</th>
-                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Amount</th>
+                  <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Rate</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Commission</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Total Commission</th>
                   <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300 text-right">Actions</th>
@@ -326,7 +326,7 @@ export default function DataTable({
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.billNumber}</td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.itemName}</td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.quantity}</td>
-                    <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.amount.toLocaleString()}</td>
+                    <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.rate.toLocaleString()}</td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.commission.toLocaleString()}</td>
                     <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.totalCommission.toLocaleString()}</td>
                     <td className="p-3">

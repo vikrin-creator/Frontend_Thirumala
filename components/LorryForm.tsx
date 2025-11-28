@@ -39,7 +39,7 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
     billNumber: '',
     itemName: '',
     quantity: 0,
-    amount: 0,
+    rate: 0,
     commission: 0
   })
 
@@ -91,7 +91,7 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
         billNumber: '',
         itemName: '',
         quantity: 0,
-        amount: 0,
+        rate: 0,
         commission: 0
       })
       setSelectedSeller('')
@@ -255,12 +255,12 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
 
             <label className="flex flex-col">
               <p className="text-gray-800 dark:text-gray-200 text-base font-medium leading-normal pb-2">
-                Unload Date
+                Bargain Date
               </p>
               <input 
-                id="unloadDate"
-                name="unloadDate"
-                value={formData.unloadDate}
+                id="bargainDate"
+                name="bargainDate"
+                value={formData.bargainDate}
                 onChange={handleChange}
                 className="soft-input" 
                 type="date"
@@ -285,12 +285,12 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
 
             <label className="flex flex-col">
               <p className="text-gray-800 dark:text-gray-200 text-base font-medium leading-normal pb-2">
-                Bargain Date
+                Unload Date
               </p>
               <input 
-                id="bargainDate"
-                name="bargainDate"
-                value={formData.bargainDate}
+                id="unloadDate"
+                name="unloadDate"
+                value={formData.unloadDate}
                 onChange={handleChange}
                 className="soft-input" 
                 type="date"
@@ -363,7 +363,22 @@ export default function LorryForm({ sellers = [], buyers = [], onAddLorry, mode 
               />
             </label>
 
-
+            <label className="flex flex-col">
+              <p className="text-gray-800 dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                Rate
+              </p>
+              <input 
+                id="rate"
+                name="rate"
+                value={formData.rate}
+                onChange={handleChange}
+                className="soft-input" 
+                placeholder="e.g., 50.00" 
+                type="number"
+                step="0.01"
+                autoComplete="off"
+              />
+            </label>
 
             {formData.billType !== 'imported' && (
               <label className="flex flex-col">

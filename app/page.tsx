@@ -34,15 +34,17 @@ interface Lorry {
   sellerName: string
   lorryNumber: string
   counterpartyName: string
-  unloadDate: string
-  buyingDate: string
   bargainDate: string
+  buyingDate: string
+  unloadDate: string
+  
+  
   billType: string
   billName: string
   billNumber: string
   itemName: string
   quantity: number
-  amount: number
+  rate: number
   commission: number
   totalCommission: number
 }
@@ -186,7 +188,7 @@ export default function Home() {
               billNumber: lorry.billNumber,
               itemName: lorry.itemName,
               quantity: lorry.quantity,
-              amount: lorry.amount,
+              rate: lorry.rate || lorry.amount || 0,
               commission: lorry.commission,
               totalCommission: lorry.totalCommission
             }

@@ -30,7 +30,7 @@ interface Lorry {
   billNumber: string
   itemName: string
   quantity: number
-  amount: number
+  rate: number
   commission: number
   totalCommission: number
 }
@@ -52,7 +52,7 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
   const [showBuyerDropdown, setShowBuyerDropdown] = useState(false)
   const [generatedBills, setGeneratedBills] = useState<any[]>([])
   const totalCommission = [...sellerLorries, ...buyerLorries].reduce((sum, lorry) => sum + lorry.totalCommission, 0)
-  const totalAmount = [...sellerLorries, ...buyerLorries].reduce((sum, lorry) => sum + lorry.amount, 0)
+  const totalAmount = [...sellerLorries, ...buyerLorries].reduce((sum, lorry) => sum + lorry.rate, 0)
 
   // Filter sellers based on search
   const filteredSellers = sellers.filter(seller =>
@@ -223,7 +223,7 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
 
     // Calculate total commission for all items
     const totalCommission = bill.items.reduce((sum: number, item: any) => sum + item.totalCommission, 0)
-    const totalAmount = bill.items.reduce((sum: number, item: any) => sum + item.amount, 0)
+    const totalAmount = bill.items.reduce((sum: number, item: any) => sum + item.rate, 0)
 
     // Generate HTML content
     const htmlContent = `
@@ -241,7 +241,7 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
             padding: 15px;
             background: white;
             color: black;
-            font-size: 12px;
+            font-size: 9px;
           }
           .header-container {
             border: 2px solid black;
@@ -255,12 +255,12 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
           }
           .header h1 {
             margin: 0 0 5px 0;
-            font-size: 20px;
+            font-size: 14px;
             font-weight: bold;
             color: black;
           }
           .header .address {
-            font-size: 10px;
+            font-size: 8px;
             margin: 2px 0;
             line-height: 1.2;
           }
@@ -268,14 +268,14 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
             display: flex;
             justify-content: space-between;
             padding: 5px 10px;
-            font-size: 9px;
+            font-size: 7px;
             border-bottom: 1px solid black;
           }
           .bill-title {
             text-align: center;
             padding: 8px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 11px;
             border-bottom: 1px solid black;
             background: #f0f0f0;
           }
@@ -291,21 +291,21 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
           }
           .party-right {
             text-align: right;
-            font-size: 11px;
+            font-size: 9px;
           }
           .party-info .name {
             font-weight: bold;
-            font-size: 13px;
+            font-size: 10px;
             margin-bottom: 3px;
           }
           .party-info .address {
-            font-size: 11px;
+            font-size: 9px;
             color: #333;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10px;
+            font-size: 8px;
           }
           th, td {
             border: 1px solid black;
@@ -316,11 +316,11 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
           th {
             background-color: white;
             font-weight: bold;
-            font-size: 9px;
+            font-size: 7px;
             line-height: 1.1;
           }
           td {
-            font-size: 9px;
+            font-size: 8px;
           }
           .text-left { text-align: left !important; }
           .text-right { text-align: right !important; }
@@ -357,10 +357,8 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
         
         <div class="header-container">
           <div class="header">
-            <h1>${bill.companyName || 'TIRUMULA BROKERS'}</h1>
-            <div class="address">ADDRESS NO: ETUKURU ROAD</div>
-            <div class="address">OPP FANCY DISUCTION PLAZA, GUNTUR.</div>
-            <div class="address">E-MAIL ID: ${bill.companyName === 'BALAJI BROKERS' ? 'tirumulasrinu@gmail.com' : 'tirumalabm@gmail.com'}</div>
+            <h1>${bill.companyName || 'TIRUMALA BROKERS'}</h1>
+            <div class="address">ADDRESS NO: ETUKURU ROAD, OPP FANCY DISUCTION PLAZA, GUNTUR, E-MAIL ID: ${bill.companyName === 'BALAJI BROKERS' ? 'tirumulasrinu@gmail.com' : 'tirumalabm@gmail.com'}</div>
           </div>
           
           <div class="contact-info">
@@ -379,7 +377,7 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
             </div>
             <div class="party-right">
               <div>BILL NO: ${bill.billNumber.replace('SB', '').replace('BB', '')}</div>
-              <div style="margin-top: 20px;">DATE:-</div>
+              <div style="margin-top: 20px;">DATE:- ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('-')}</div>
             </div>
           </div>
         </div>
@@ -408,9 +406,9 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
                 <td class="text-left">${item.sellerName}</td>
                 <td>${item.billNumber}</td>
                 <td class="text-left">${item.itemName}</td>
-                <td class="text-right">${item.commission || 0}</td>
+                <td class="text-right">${(item.rate || item.amount) ? (item.rate || item.amount) : '-'}</td>
                 <td class="text-right">${item.quantity}</td>
-                <td class="text-right">12.0</td>
+                <td class="text-right">${item.commission || 0}</td>
                 <td class="text-right">${item.totalCommission.toLocaleString()}</td>
               </tr>
             `).join('')}
@@ -656,7 +654,7 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
           </h3>
           
           {generatedBills.length > 0 ? generatedBills.map((bill) => {
-            const totalAmount = bill.items.reduce((sum: number, item: any) => sum + item.amount, 0)
+            const totalAmount = bill.items.reduce((sum: number, item: any) => sum + item.rate, 0)
             const totalCommission = bill.items.reduce((sum: number, item: any) => sum + item.totalCommission, 0)
             
             return (
@@ -720,7 +718,7 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
                         <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Bill Number</th>
                         <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Item Name</th>
                         <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Quantity</th>
-                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Amount</th>
+                        <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Rate</th>
                         <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Commission</th>
                         <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Total Commission</th>
                       </tr>
@@ -741,7 +739,7 @@ export default function BillingPage({ sellers, buyers, sellerLorries, buyerLorri
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.itemName}</td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">{lorry.quantity}</td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">
-                            ₹{(bill.partyType === 'buyer' ? lorry.totalCommission : lorry.amount).toLocaleString()}
+                            ₹{(bill.partyType === 'buyer' ? lorry.totalCommission : lorry.rate).toLocaleString()}
                           </td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.commission.toLocaleString()}</td>
                           <td className="p-3 text-sm text-gray-800 dark:text-gray-100">₹{lorry.totalCommission.toLocaleString()}</td>
